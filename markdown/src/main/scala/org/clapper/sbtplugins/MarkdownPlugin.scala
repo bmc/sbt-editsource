@@ -279,8 +279,8 @@ trait MarkdownPlugin extends Project
     {
         if (ShowdownLocal.exists)
         {
-            log.info("Deleting " + ShowdownLocal);
-            FileUtilities.clean(ShowdownLocal, log);
+            log.info("Deleting " + MarkdownLibDir);
+            FileUtilities.clean(MarkdownLibDir, log);
         }
 
         None
