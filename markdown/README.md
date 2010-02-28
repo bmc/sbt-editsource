@@ -32,7 +32,8 @@ In your own project, create a `project/plugins/Plugins.scala` file (if you
 haven't already), and add the following line, to make the project available
 to your SBT project:
 
-    val markdown = "org.clapper" % "sbt-markdown-plugin" % "0.1"
+    val markdown = "org.clapper" % "sbt-markdown-plugin" % "0.1" from
+    "http://github.com/downloads/bmc/sbt-plugins/sbt-markdown-plugin-0.1.jar"
 
 Create a project build file in `project/build/', if you haven't already.
 Then, ensure that the project mixes in `MarkdownPlugin`. You have to ensure
