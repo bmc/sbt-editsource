@@ -29,11 +29,12 @@ publish it locally:
     sbt update publish-local
 
 In your own project, create a `project/plugins/Plugins.scala` file (if you
-haven't already), and add the following line, to make the project available
+haven't already), and add the following lines, to make the project available
 to your SBT project:
 
-    val markdown = "org.clapper" % "sbt-markdown-plugin" % "0.1" from
-    "http://github.com/downloads/bmc/sbt-plugins/sbt-markdown-plugin-0.1.jar"
+    val orClapperMavenRepo = "clapper.org Maven Repo" at "http://maven.clapper.org/"
+
+    val markdown = "org.clapper" % "sbt-markdown-plugin" % "0.1"
 
 Create a project build file in `project/build/', if you haven't already.
 Then, ensure that the project mixes in `MarkdownPlugin`. You have to ensure
@@ -46,8 +47,8 @@ method. Here's an example:
 
     class MyProject(info: ProjectInfo) extends DefaultProject with MarkdownPlugin
     {
-        override def cleanLibAction = super.cleanAction dependsOn(markdownCleanLib)
-        override def updateAction = super.updateAction dependsOn(markdownUpdate)
+        override def cleanLibAction = super.cleanAction dependsOn(markdownCleanLibAction)
+        override def updateAction = super.updateAction dependsOn(markdownUpdateAction)
 
         // An "htmlDocs" action that creates an HTML file from a Markdown source.
         val usersGuideMD = "src" / "docs" / "guide.md"

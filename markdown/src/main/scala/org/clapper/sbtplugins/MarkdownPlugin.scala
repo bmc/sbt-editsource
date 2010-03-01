@@ -82,8 +82,8 @@ trait MarkdownPlugin extends Project
                                    Tasks
     \* ---------------------------------------------------------------------- */
 
-    lazy val markdownUpdate = task { doMarkdownUpdate }
-    lazy val markdownCleanLib = task { doMarkdownCleanLib}
+    lazy val markdownUpdateAction = task { doMarkdownUpdate }
+    lazy val markdownCleanLibAction = task { doMarkdownCleanLib}
 
     /* ---------------------------------------------------------------------- *\
                                   Methods
