@@ -10,6 +10,11 @@ file in subdirectory for details on its plugin.
 
 [sbt]: http://code.google.com/p/simple-build-tool/
 
+Current plugins included in this repository:
+
+* EditSource: Edit a source (file or string), applying substitutions.
+* Markdown: Run Markdown on a source file, producing an HTML document.
+
 License
 -------
 

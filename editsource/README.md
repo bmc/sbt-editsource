@@ -1,19 +1,18 @@
-Markdown SBT Plugin
-==================
+Edit Source SBT Plugin
+======================
 
 ## Introduction
 
-This project contains a [Markdown][markdown] plugin for the [SBT][sbt]
-build tool. This Markdown plugin uses the [Showdown][showdown] Javascript 
-Markdown parser and the Mozilla [Rhino][rhino] Javascript engine to convert
-Markdown into HTML. For details on the approach, see my
-[Parsing Markdown in Scala][markdown-blog] blog entry.
+This project contains an "edit source" plugin for the [SBT][sbt] build
+tool. This plugin provides a method that offers a similar substitution
+facility to the one available with an [Ant's][ant] `filterset`. That is, it
+edits a source (a file, a string--anything that can be wrapped in a Scala
+`Source` object), substituting variable references. Variable references
+look like _@var@_. A map supplies values for the variables. Any variable
+that isn't found in the map is silently ignored.
 
 [sbt]: http://code.google.com/p/simple-build-tool/
-[markdown]: http://daringfireball.net/projects/markdown/
-[showdown]: http://attacklab.net/showdown/
-[rhino]: http://www.mozilla.org/rhino/
-[markdown-blog]: http://brizzled.clapper.org/id/98
+[ant]: http://ant.apache.org/
 
 ## Getting this Plugin
 
@@ -25,7 +24,7 @@ to your SBT project:
 
     val orgClapperMavenRepo = "clapper.org Maven Repo" at "http://maven.clapper.org/"
 
-    val markdown = "org.clapper" % "sbt-markdown-plugin" % "0.1.1"
+    val editsource = "org.clapper" % "sbt-editsource-plugin" % "0.1"
 
 ### The Development Version
 
@@ -37,7 +36,7 @@ First, download the plugin's source code by cloning this repository.
 
     git clone http://github.com/bmc/sbt-plugins.git
 
-Then, within the `markdown` project directory, publish it locally:
+Then, within the `editsource` project directory, publish it locally:
 
     sbt update publish-local
 
@@ -51,23 +50,48 @@ project.
 Create a project build file in `project/build/', if you haven't already.
 Then, ensure that the project mixes in `MarkdownPlugin`. You have to ensure
 that you hook in the Markdown plugin's `update` and `clean-lib` logic, as
-shown below. Once you've done that, you can use the plugin's `markdown()`
-method. Here's an example:
+shown below. Once you've done that, you can use the plugin's
+`editSourceToFile()` and `editSourceToList()` methods.
+
+### Example
+
+This example assumes you have a file called `install.properties` that is
+used to configure some (fictitious) installer program; you want to
+substitute some values within that file, based on settings in your build
+file. The file might look something like this:
+
+    main.jar: @JAR_FILE@
+    docs.directory: @DOCS_DIR@
+    package.name: @PACKAGE_NAME@
+    package.version: @PACKAGE_VERSION@
+
+
+The EditSource plugin can be used to edit the _@VAR@_ references within the
+file, as shown here.
 
     import sbt_
-    import org.clapper.sbtplugins.MarkdownPlugin
+    import org.clapper.sbtplugins.EditFilePlugin
 
-    class MyProject(info: ProjectInfo) extends DefaultProject with MarkdownPlugin
+    class MyProject(info: ProjectInfo) extends DefaultProject with EditSourcePlugin
     {
-        override def cleanLibAction = super.cleanAction dependsOn(markdownCleanLibAction)
-        override def updateAction = super.updateAction dependsOn(markdownUpdateAction)
+        val installCfgSource = "src" / "installer" / "install.properties"
+        val vars = Map(
+            "JAR_FILE" -> jarPath.absolutePath,
+            "DOCS_DIR" -> ("src" / "docs").absolutePath,
+            "PACKAGE_NAME" -> "My Project",
+            "PACKAGE_VERSION" -> projectVersion.value.toString
+        ) 
 
-        // An "htmlDocs" action that creates an HTML file from a Markdown source.
-        val usersGuideMD = "src" / "docs" / "guide.md"
-        val usersGuideHTML = "target" / "doc" / "guide.html"
-        lazy val htmlDocs = fileTask(usersGuideMD from usersGuideHTML)
+        import java.io.File
+        val temp = File.createTempFile("inst", "properties")
+        temp.deleteOnExit
+        editSourceToFile(Source.fromFile(installCfgSource.absolutePath, temp)
+        runInstaller(temp)
+        temp.delete
+
+        private def runInstaller(configFile: File) =
         {
-            markdown(usersGuideMD, usersGuideHTML, log)
+            ...
         }
     }
 
