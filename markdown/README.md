@@ -19,22 +19,42 @@ file in subdirectory for details on its plugin.
 [rhino]: http://www.mozilla.org/rhino/
 [markdown-blog]: http://brizzled.clapper.org/id/98
 
-Using this Plugin
------------------
+Getting this Plugin
+-------------------
 
-To use this plugin in your project, download the plugin's source code by
-cloning this repository. The, within the `markdown` project directory,
-publish it locally:
-
-    sbt update publish-local
+The Released Version
+~~~~~~~~~~~~~~~~~~~~
 
 In your own project, create a `project/plugins/Plugins.scala` file (if you
 haven't already), and add the following lines, to make the project available
 to your SBT project:
 
-    val orClapperMavenRepo = "clapper.org Maven Repo" at "http://maven.clapper.org/"
+    val orgClapperMavenRepo = "clapper.org Maven Repo" at "http://maven.clapper.org/"
 
     val markdown = "org.clapper" % "sbt-markdown-plugin" % "0.1"
+
+The Development Version
+~~~~~~~~~~~~~~~~~~~~~~~
+
+You can also use the development version of this plugin (that is, the
+version checked into the [GitHub repository][github-repo]), by building it
+locally.
+
+First, download the plugin's source code by cloning this repository.
+
+    git clone http://github.com/bmc/sbt-plugins.git
+
+Then, within the `markdown` project directory, publish it locally:
+
+    sbt update publish-local
+
+[github-repo]: http://github.com/bmc/sbt-plugins
+
+Using the Plugin
+----------------
+
+Regardless of how you get the plugin, here's how to use it in your SBT
+project.
 
 Create a project build file in `project/build/', if you haven't already.
 Then, ensure that the project mixes in `MarkdownPlugin`. You have to ensure
