@@ -1,8 +1,7 @@
 Markdown SBT Plugin
 ==================
 
-Introduction
-------------
+## Introduction
 
 This project contains a [Markdown][markdown] plugins for the [SBT][sbt]
 build tool. This Markdown plugin uses the [Showdown][showdown] Javascript 
@@ -19,11 +18,9 @@ file in subdirectory for details on its plugin.
 [rhino]: http://www.mozilla.org/rhino/
 [markdown-blog]: http://brizzled.clapper.org/id/98
 
-Getting this Plugin
--------------------
+## Getting this Plugin
 
-The Released Version
-~~~~~~~~~~~~~~~~~~~~
+### The Released Version
 
 In your own project, create a `project/plugins/Plugins.scala` file (if you
 haven't already), and add the following lines, to make the project available
@@ -33,8 +30,7 @@ to your SBT project:
 
     val markdown = "org.clapper" % "sbt-markdown-plugin" % "0.1"
 
-The Development Version
-~~~~~~~~~~~~~~~~~~~~~~~
+### The Development Version
 
 You can also use the development version of this plugin (that is, the
 version checked into the [GitHub repository][github-repo]), by building it
@@ -50,8 +46,7 @@ Then, within the `markdown` project directory, publish it locally:
 
 [github-repo]: http://github.com/bmc/sbt-plugins
 
-Using the Plugin
-----------------
+## Using the Plugin
 
 Regardless of how you get the plugin, here's how to use it in your SBT
 project.
@@ -79,8 +74,7 @@ method. Here's an example:
         }
     }
 
-License
--------
+## License
 
 This plugin is released under a BSD license, adapted from
 <http://opensource.org/licenses/bsd-license.php>
@@ -115,8 +109,7 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Copyrights
-----------
+## Copyrights
 
 These plugins are copyright &copy; 2010 Brian M. Clapper.
 
