@@ -16,7 +16,7 @@ Current plugins included in this repository:
 * IzPack: Run the [IzPack][izpack] installer generator within SBT.
 * Markdown: Run Markdown on a source file, producing an HTML document.
 
-[izpack]: http://izforge.org/
+[izpack]: http://izpack.org/
 
 License
 -------
