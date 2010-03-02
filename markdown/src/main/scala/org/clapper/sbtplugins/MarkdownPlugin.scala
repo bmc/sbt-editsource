@@ -67,7 +67,7 @@ import scala.io.Source
  *
  * You can invoke the `markdown()` method within any task.
  */
-trait MarkdownPlugin extends Project
+trait MarkdownPlugin extends DefaultProject
 {
     val MarkdownLibDir: String = "markdown_lib"
 
@@ -82,8 +82,13 @@ trait MarkdownPlugin extends Project
                                    Tasks
     \* ---------------------------------------------------------------------- */
 
-    lazy val markdownUpdateAction = task { doMarkdownUpdate }
-    lazy val markdownCleanLibAction = task { doMarkdownCleanLib}
+    override def updateAction = markdownUpdateAction
+                                .dependsOn(super.updateAction)
+    lazy val markdownUpdateAction = task {doMarkdownUpdate}
+
+    override def cleanLibAction = markdownCleanLibAction
+                                .dependsOn(super.cleanLibAction)
+    lazy val markdownCleanLibAction = task {doMarkdownCleanLib}
 
     /* ---------------------------------------------------------------------- *\
                                   Methods
@@ -240,6 +245,7 @@ trait MarkdownPlugin extends Project
 
         import java.net.URL
 
+        log.info("markdown-update")
         FileUtilities.createDirectory(MarkdownLibDir, log)
         if (! ShowdownLocal.exists)
         {
@@ -277,7 +283,8 @@ trait MarkdownPlugin extends Project
 
     private def doMarkdownCleanLib: Option[String] =
     {
-        if (ShowdownLocal.exists)
+        log.info("markdown-clean-lib")
+        if (new File(MarkdownLibDir).exists)
         {
             log.info("Deleting " + MarkdownLibDir);
             FileUtilities.clean(MarkdownLibDir, log);

@@ -79,7 +79,7 @@ trait IzPackPlugin extends Project
                                                     baseDir.getPath, // basedir
                                                     CompilerConfig.STANDARD,
                                                     installerJar.absolutePath)
-            log.info("Creating installer jar.")
+            log.info("Creating installer in " + installerJar)
             compilerConfig.executeCompiler
             None
         }
