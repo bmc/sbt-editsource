@@ -211,7 +211,7 @@ trait MarkdownPlugin extends DefaultProject
 <head>
 <title>{title}</title>
 <style type="text/css">
-{css}
+{cssLines}
 </style>
 {js}
 <meta http-equiv="content-type" content={contentType}/>
