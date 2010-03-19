@@ -268,6 +268,8 @@ package org.clapper.sbtplugins.izpack
             var useUninstaller = true
             var requiresJDK = false
             var runPrivileged = false
+            var pack200 = false
+            var writeInstallationInfo = true
 
             private val authors = new ListBuffer[Author]
 
@@ -318,16 +320,21 @@ package org.clapper.sbtplugins.izpack
                     stringOptionToTextNode(options.getOrElse(name, None), name)
 
                 <info>
-                <appname>{appName}</appname>
-                {opt(AppVersion)}
-                {opt(JavaVersion)}
-                {opt(AppSubpath)}
-                {opt(URL)}
-                {opt(WebDir)}
-                <requiresjdk>{yesno(requiresJDK)}</requiresjdk>
-                {maybeXML("uninstaller", useUninstaller, Map("write" -> "yes"))}
-                {maybeXML("run-privileged", runPrivileged)}
-                {authorsToXML}
+                    <appname>{appName}</appname>
+                    {opt(AppVersion)}
+                    {opt(JavaVersion)}
+                    {opt(AppSubpath)}
+                    {opt(URL)}
+                    {opt(WebDir)}
+                    <writeinstallationinformation>
+                        {yesno(writeInstallationInfo)}
+                    </writeinstallationinformation>
+                    <requiresjdk>{yesno(requiresJDK)}</requiresjdk>
+                    {maybeXML("uninstaller", useUninstaller, 
+                              Map("write" -> "yes"))}
+                    {maybeXML("run-privileged", runPrivileged)}
+                    {maybeXML("pack200", pack200)}
+                    {authorsToXML}
                 </info>
             }
 
@@ -486,21 +493,27 @@ package org.clapper.sbtplugins.izpack
                              "ignored unless packager is MultiVolume.")
                 }
 
+                var unpacker: String = ""
                 <packaging>
-                <packager class={packager.toString}>
-                {
-                    packager match
+                    <packager class={packager.toString}>
                     {
-                        case MultiVolume =>
-                            <options
-                               volumesize={volumeSize.toString}
-                               firstvolumefreespace={firstVolFreeSpace.toString}
-                            />
-                          case SingleVolume =>
-                              new Comment("no options")
-                      }
-                  }
-                  </packager>
+                        packager match
+                        {
+                            case MultiVolume =>
+                                <options
+                                   volumesize={volumeSize.toString}
+                                   firstvolumefreespace={firstVolFreeSpace.toString}
+                                />
+                                unpacker = "com.izforge.izpack.installer." +
+                                           "MultiVolumeUnpacker"
+                            case SingleVolume =>
+                                new Comment("no options")
+                                unpacker = "com.izforge.izpack.installer." +
+                                           "Unpacker"
+                        }
+                    }
+                    </packager>
+                    <unpacker class={unpacker}/>
                 </packaging>
             }
         }
