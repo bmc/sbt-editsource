@@ -44,27 +44,23 @@ package org.clapper.sbtplugins.izpack
     import sbt._
     import java.io.File
 
+    trait OperatingSystemConstraints
+    {
+        var operatingSystems = new MutableSet[String]
+
+        def onlyFor(osNames: String*) = 
+            for (os <- osNames)
+                operatingSystems += os
+
+        def operatingSystemsToXML =
+            for (os <- operatingSystems) yield <os family={os}/>
+    }
+
     trait Section
     {
         val SectionName: String
 
-        def set(key: String, value: Any): Unit = badField(key, value)
-
-        def toXML: Elem
-
-        implicit def stringToAssigner[T](key: String) = new Assigner(key, this)
-
-        protected def badField(name: String, value: Any): Unit =
-            badField(name, value, null)
-
-        protected def badField(name: String, value: Any, msg: String): Unit =
-        {
-            val prefix = SectionName + " section: Unknown configuration item " +
-                         "or bad value for configuration item: "  +
-                         name + " := " + value.toString
-            val exceptionMsg = if (msg == null) prefix else prefix + ". " + msg
-            throw new RuntimeException(exceptionMsg)
-        }
+        def toXML: NodeSeq
 
         protected def writeString(path: Path, str: String): Unit =
             writeString(path.toString, str)
@@ -78,12 +74,61 @@ package org.clapper.sbtplugins.izpack
             writer.close
         }
 
-        protected def yesno(b: Boolean): String = if (b) "yes" else "no"
-    }
+        protected def emptyString(s: String) = (s == null) || (s.trim == "")
 
-    class Assigner(val key: String, section: Section)
-    {
-        def := [T](value: T): Unit = section.set(key, value)
+        protected def stringToOption(s: String) =
+            if (emptyString(s)) None else Some(s)
+
+        protected def optionToString(o: Option[String]) =
+            if (o == None) "" else o.get
+
+        protected def sectionToXML(section: Option[Section], name: String) =
+            section match
+            {
+                case Some(sect) => sect.toXML
+                case None       => new Comment("No " + name + " section")
+            }
+
+        protected def stringOptionToTextNode(o: Option[String], name: String) =
+            o match
+            {
+                case None =>
+                    new Comment("No " + name + " element")
+                case Some(text) =>
+                    Elem(null, name, Node.NoAttributes, TopScope, Text(text))
+            }
+
+        protected def maybeXML(name: String, create: Boolean): Node =
+            maybeXML(name, create, Map.empty[String,String])
+
+        protected def maybeXML(name: String,
+                               create: Boolean,
+                               attrs: Map[String, String]): Node =
+        {
+            def makeAttrs(attrs: List[(String, String)]): MetaData =
+            {
+                attrs match
+                {
+                    case (n, v) :: Nil =>
+                        new UnprefixedAttribute(n, v, Node.NoAttributes)
+                    case (n, v) :: tail => 
+                        new UnprefixedAttribute(n, v, makeAttrs(tail))
+                    case Nil =>
+                        Null
+                }
+            }
+
+            if (! create)
+                new Comment("No " + name + " element")
+
+            else
+            {
+                Elem(null, name, makeAttrs(attrs.elements.toList), TopScope,
+                     Text(""))
+            }
+        }
+
+        protected def yesno(b: Boolean): String = if (b) "yes" else "no"
     }
 
     /*-------------------------------------------------------------------*\
@@ -91,16 +136,6 @@ package org.clapper.sbtplugins.izpack
     \*-------------------------------------------------------------------*/
 
     /**
-     * val cfg = IzpackConfig
-     * {
-     *     cfg: IzPackConfig =>
-     *
-     *     cfg.info
-     *     (
-     *         "appname"    -> name,
-     *         "appversion" -> thing
-     *     )
-     * }
      */
     abstract class IzPackConfig(val workingInstallDir: Path, 
                                 val log: Logger) extends Section
@@ -115,7 +150,7 @@ package org.clapper.sbtplugins.izpack
         final val OS = "os"
 
         private var theInfo: Option[Info] = None
-        private var languages: List[String] = Nil
+        var languages: List[String] = Nil
         private var theResources: Option[Resources] = None
         private var thePackaging: Option[Packaging] = None
         private var theGuiPrefs: Option[GuiPrefs] = None
@@ -169,8 +204,6 @@ package org.clapper.sbtplugins.izpack
             thePacks = setOnlyOnce(thePacks, p)
         def packs: Option[Packs] = thePacks
 
-        def Languages(langs: String*) = languages = langs.toList
-
         private def languagesToXML =
         {
             val langs = if (languages == Nil) List("eng") else languages
@@ -178,13 +211,6 @@ package org.clapper.sbtplugins.izpack
             {for (name <- languages) yield <langpack iso3={name}/>}
             </locale>
         }
-
-        private def sectionToXML(section: Option[Section], name: String) =
-            section match
-            {
-                case Some(sect) => sect.toXML
-                case None       => new Comment("No " + name + " section")
-            }
 
         def toXML =
         {
@@ -212,23 +238,25 @@ package org.clapper.sbtplugins.izpack
             val installFile = workingInstallDir / "install.xml"
             log.info("Generating " + installFile)
             val xml = toXML
-            val prettyPrinter = new PrettyPrinter(80, 2)
+            val prettyPrinter = new PrettyPrinter(256, 2)
             writeString(installFile, prettyPrinter.format(xml))
             log.info("Done.")
         }
+
+        private def relPath(s: String) = Path.fromString(workingInstallDir, s)
 
         /*------------------------------------------------------------------*\
                                       <info>
         \*------------------------------------------------------------------*/
 
-        class Author(val name: String, val email: String)
+        private case class Author(val name: String, val email: Option[String])
         {
-            override def toString = name + " at " + email
-        }
-
-        class AuthorBuilder(val name: String)
-        {
-            def email(email: String) = new Author(name, email)
+            override def toString = 
+                email match
+                {
+                    case None    => name
+                    case Some(e) => name + " at " + e
+                }
         }
 
         class Info extends Section
@@ -237,112 +265,88 @@ package org.clapper.sbtplugins.izpack
 
             info = Some(this)
 
-            final val AppName = "appname"
-            final val AppVersion = "appversion"
-            final val AppSubpath = "appsubpath"
-            final val Author = "author"
-            final val URL = "url"
-            final val JavaVersion = "javaversion"
-            final val WebDir = "webdir"
-            final val RequiresJDK = "requiresjdk"
-            final val RunPrivileged = "runprivileged"
-            final val MakeUninstaller = "uninstaller"
+            var useUninstaller = true
+            var requiresJDK = false
+            var runPrivileged = false
 
-            private var appName: String = ""
-            private var appVersion: String = ""
             private val authors = new ListBuffer[Author]
-            private var appSubpath: Option[String] = None
-            private var url: Option[String] = None
-            private var javaVersion = "1.6"
-            private var requiresJDK = false
-            private var runPrivileged = false
-            private var webdir: Option[String] = None
-            private var useUninstaller = true
 
-            implicit def stringToAuthorBuilder(name: String) =
-                new AuthorBuilder(name)
+            private val JavaVersion = "javaversion"
+            private val URL = "url"
+            private val AppSubpath = "appsubpath"
+            private val WebDir = "webdir"
+            private val AppName = "appname"
+            private val AppVersion = "appversion"
 
-            override def set(key: String, value: Any): Unit =
-            {
-                (key, value) match
-                {
-                    case (AppName, s: String)          => appName = s
-                    case (AppVersion, s: String)       => appVersion = s
-                    case (AppSubpath, s: String)       => appSubpath = Some(s)
-                    case (Author, a: Author)           => authors += a
-                    case (URL, s: String)              => url = Some(s)
-                    case (JavaVersion, s: String)      => javaVersion = s
-                    case (WebDir, s: String)           => webdir = Some(s)
-                    case (RequiresJDK, b: Boolean)     => requiresJDK = b
-                    case (RunPrivileged, b: Boolean)   => runPrivileged = b
-                    case (MakeUninstaller, b: Boolean) => useUninstaller = b
-                    case _                             => badField(key, value)
-                }
-            }
+            private val options = MutableMap.empty[String, Option[String]]
+
+            private def setOption(name: String, value: String) =
+                options += name -> stringToOption(value)
+
+            private def getOption(name: String) =
+                optionToString(options.getOrElse(name, None))
+
+            setOption(JavaVersion, "1.6")
+            setOption(AppName, "Hey I need a name!")
+
+            def author(name: String): Unit =
+                author(name, "")
+            def author(name: String, email: String): Unit =
+                authors += Author(name, stringToOption(email))
+
+            def url_=(u: String): Unit = setOption(URL, u)
+            def url: String = getOption(URL)
+
+            def javaVersion_=(v: String): Unit = setOption(JavaVersion, v)
+            def javaVersion: String = getOption(JavaVersion)
+
+            def appName_=(v: String): Unit = setOption(AppName, v)
+            def appName: String = getOption(AppName)
+
+            def appVersion_=(v: String): Unit = setOption(AppVersion, v)
+            def appVersion: String = getOption(AppVersion)
+
+            def appSubPath_=(v: String): Unit = setOption(AppSubpath, v)
+            def appSubPath: String = getOption(AppSubpath)
+
+            def webdir_=(v: String): Unit = setOption(WebDir, v)
+            def webdir: String = getOption(WebDir)
 
             def toXML =
             {
+                def opt(name: String): Node =
+                    stringOptionToTextNode(options.getOrElse(name, None), name)
+
                 <info>
                 <appname>{appName}</appname>
-                <appversion>{appVersion}</appversion>
-                <javaversion>{javaVersion}</javaversion>
-                <requiresjdk>{requiresJDK}</requiresjdk>
-
-                {
-                    appSubpath match
-                    {
-                        case None    => new Comment("no application subpath")
-                        case Some(p) => <appsubpath>{p}</appsubpath>
-                    }
-                }
-
-                {
-                    if (authors.size > 0)
-                    {
-                        <authors>
-                        {
-                            for (author <- authors)
-                                yield <author name={author.name}
-                                              email={author.email}/>
-                        }
-                        </authors>
-                    }
-                    else
-                    {
-                        new Comment("no authors")
-                    }
-                }
-
-                {
-                    url match
-                    {
-                        case None    => new Comment("no URL")
-                        case Some(u) => <url>{u}</url>
-                    }
-                }
-
-                {
-                    if (useUninstaller)
-                        <uninstaller write="yes"/>
-                    else
-                        new Comment("no uninstaller")
-                }
-
-                {
-                    if (runPrivileged)
-                        <run-privileged/>
-                    else
-                        new Comment("no run-privileged")
-                }
-
-                {
-                    webdir match
-                    {
-                        case None    => new Comment("no webdir")
-                        case Some(d) => <webdir>{d}</webdir>
-                    }
-                }
+                {opt(AppVersion)}
+                {opt(JavaVersion)}
+                {opt(AppSubpath)}
+                {opt(URL)}
+                {opt(WebDir)}
+                <requiresjdk>{yesno(requiresJDK)}</requiresjdk>
+                {maybeXML("uninstaller", useUninstaller, Map("write" -> "yes"))}
+                {maybeXML("run-privileged", runPrivileged)}
+                {authorsToXML}
                 </info>
+            }
+
+            private def authorsToXML =
+            {
+                if (authors.size > 0)
+                {
+                    <authors>
+                    {
+                        for (author <- authors)
+                        yield <author name={author.name}
+                                      email={author.email.getOrElse("")}/>
+                    }
+                    </authors>
+                }
+                else
+                {
+                    new Comment("no authors")
+                }
             }
         }
 
@@ -354,117 +358,96 @@ package org.clapper.sbtplugins.izpack
                                     <resources>
         \*------------------------------------------------------------------*/
 
-        class InstallDirectory(val operatingSystem: String, val path: String)
-        {
-            override def hashCode = operatingSystem.hashCode
-
-            override def toString = path + " on " + operatingSystem
-        }
-
-        class InstallDirectoryBuilder(val path: String)
-        {
-            def on(operatingSystem: String): InstallDirectory =
-                new InstallDirectory(operatingSystem, path)
-        }
-
         class Resources extends Section
         {
             final val SectionName = "Resources"
 
             resources = Some(this)
 
-            final val LicensePanel = "licensepanel"
-            final val InfoPanel = "infopanel"
-            final val Logo = "logo"
-            final val InstallDir = "installdir"
-
-            implicit def stringToInstallDirectory(s: String) =
-                new InstallDirectoryBuilder(s)
+            final val LicensePanel = "HTMLLicensePanel.license"
+            final val InfoPanel = "HTMLInfoPanel.info"
+            final val Logo = "Installer.image"
 
             private var licensePath: Option[Path] = None
             private var infoPath: Option[Path] = None
             private var imagePath: Option[Path] = None
-            private val installDirectories = new ListBuffer[InstallDirectory]
+            private var installDirectory = new InstallDirectory
 
-            override def set(key: String, value: Any): Unit =
-            {
-                (key, value) match
+            private val paths = MutableMap.empty[String, Option[Path]]
+
+            private def setPath(name: String, value: Path) =
+                paths += name -> Some(value)
+
+            private def getPath(name: String): Path =
+                paths.getOrElse(name, None) match
                 {
-                    case (LicensePanel, v: Any) => licensePath = toPath(key, v)
-                    case (InfoPanel, v: Any)    => infoPath = toPath(key, v)
-                    case (Logo, v: Any)         => imagePath = toPath(key, v)
-                    case (InstallDir, v: Any)   => handleInstallDir(key, v)
-                    case _                      => badField(key, value)
+                    case None => relPath("nothing")
+                    case Some(p) => p
+                }
+
+            def licensePanel_=(p: Path): Unit = setPath(LicensePanel, p)
+            def licensePanel: Path = getPath(LicensePanel)
+
+            def infoPanel_=(p: Path): Unit = setPath(InfoPanel, p)
+            def infoPanel: Path = getPath(InfoPanel)
+
+            def logo_=(p: Path): Unit = setPath(Logo, p)
+            def logo: Path = getPath(Logo)
+
+            class InstallDirectory extends Section
+            {
+                final val SectionName = "InstallDirectory"
+
+                installDirectory = this
+
+                implicit def stringToInstallDirectory(s: String) =
+                    new InstallDirectoryBuilder(s)
+
+                val dirs = MutableMap.empty[String,String]
+
+                class InstallDirectoryBuilder(val path: String)
+                {
+                    def on(operatingSystem: String): Unit =
+                        dirs += operatingSystem -> path
+                }
+
+                def toXML =
+                {
+                    val nodes =
+                    {
+                        for ((os, path) <- dirs)
+                            yield <res id={"TargetPanel.dir." + os}
+                                       src={installDirString(os, path)}/>
+                    }.toList
+                    NodeSeq.fromSeq(nodes)
+                }
+
+                private def installDirString(os: String, path: String): String =
+                {
+                    val filename = "instdir_" + os + ".txt"
+                    val fullPath = workingInstallDir / filename
+                    // Put the string in the file. That's how IzPack wants it.
+                    writeString(fullPath, path)
+                    fullPath.toString
                 }
             }
 
             def toXML =
             {
                 <resources>
-                {pathToXML("HTMLLicensePanel.licence", licensePath)}
-                {pathToXML("Installer.image", imagePath)}
-                {pathToXML("HTMLInfoPanel.info", infoPath)}
-                {installDirectoriesToXML(workingInstallDir)}
+                {pathToXML(LicensePanel)}
+                {pathToXML(Logo)}
+                {pathToXML(InfoPanel)}
+                {installDirectory.toXML}
                 </resources>
             }
 
-            private def toPath(key: String, value: Any): Option[Path] =
+            private def pathToXML(id: String) =
             {
-                value match
-                {
-                    case s: String       => Some(Path.fromFile(new File(s)))
-                    case p: Path         => Some(p)
-                    case _               => badField(key, value); None
-                }
-            }
-
-            private def handleInstallDir(key: String, value: Any) =
-            {
-                value match
-                {
-                    case dir: InstallDirectory => installDirectories += dir
-                    case _ => badField(key, value)
-                }
-            }
-
-            private def installDirToPath(workingDir: Path,
-                                         installDir: InstallDirectory): String =
-            {
-                val filename = "instdir_" + installDir.operatingSystem + ".txt"
-                val fullPath = workingDir / filename
-                writeString(fullPath, installDir.path)
-                fullPath.toString
-            }
-
-            private def pathToXML(id: String, p: Option[Path]) =
-            {
-                p match
+                paths.getOrElse(id, None) match
                 {
                     case None    =>  new Comment("no " + id + " resource")
                     case Some(p) => <res id={id} src={p.toString}/>
-                }
-            }
-
-            private def installDirectoriesToXML(workingInstallDir: Path) =
-            {
-                if (installDirectories.size == 0)
-                    new Comment("no overriding installation directories")
-                else
-                {
-                    val nodes =
-                    {
-                        for (dir <- installDirectories)
-                            yield
-                            {
-                                val path = installDirToPath(workingInstallDir, 
-                                                            dir)
-                                val id = "TargetPanel.dir." +
-                                         dir.operatingSystem
-                                <res id={id} src={path}/>
-                            }
-                    }
-
-                    NodeSeq.fromSeq(nodes)
                 }
             }
         }
@@ -479,50 +462,32 @@ package org.clapper.sbtplugins.izpack
 
             packaging = Some(this)
 
-            final val Packager = "packager"
-            final val VolumeSize = "volme-size"
-            final val FirstVolumeFreeSpace = "firstvolumefreespace"
-            final val MultiVolume =
-                "com.izforge.izpack.compiler.MultiVolumePackager"
-            final val SingleVolume =
-                "com.izforge.izpack.compiler.Packager"
-
-            private var packager: String = SingleVolume
-            private var volumeSize: Int = 0
-            private var firstVolFreeSpace: Int = 0
-
-            private def setPackager(k: String, v: String) =
+            object Packager extends Enumeration
             {
-                v match
-                {
-                    case SingleVolume => packager = SingleVolume
-                    case MultiVolume  => packager = MultiVolume
-                    case _            => badField(k, v)
-                }
+                private val packageName = "com.izforge.izpack.compiler"
+                type Packager = Value
+
+                val SingleVolume = Value(packageName + ".Packager")
+                val MultiVolume = Value(packageName + ".MultiVolumePackager")
             }
 
-            override def set(key: String, value: Any): Unit =
-            {
-                (key, value) match
-                {
-                    case (Packager, s: String)          => setPackager(key, s)
-                    case (VolumeSize, i: Int)           => volumeSize = i
-                    case (FirstVolumeFreeSpace, i: Int) => firstVolFreeSpace = i
-                    case _                              => badField(key, value)
-                }
-            }
+            import Packager._
+
+            var packager: Packager = SingleVolume
+            var volumeSize: Int = 0
+            var firstVolFreeSpace: Int = 0
 
             def toXML =
             {
                 if ((packager != MultiVolume) &&
                     ((volumeSize + firstVolFreeSpace) > 0))
                 {
-                    log.warn("volumesize and firstvolumefreespace are " +
-                             "ignored unless packager is multi-volume.")
+                    log.warn("volumeSize and firstVolFreeSpace are " +
+                             "ignored unless packager is MultiVolume.")
                 }
 
                 <packaging>
-                <packager class={packager}>
+                <packager class={packager.toString}>
                 {
                     packager match
                     {
@@ -550,62 +515,27 @@ package org.clapper.sbtplugins.izpack
 
             guiprefs = Some(this)
 
-            final val Height = "height"
-            final val Width  = "width"
-            final val Resizable = "resizable"
+            var height: Int = 600
+            var width: Int = 800
+            var resizable: Boolean = true
 
-            private var height: Int = 600
-            private var width: Int = 800
-            private var resizable: Boolean = true
             private var lafs = new ListBuffer[LookAndFeel]
 
-            class LookAndFeel extends Section
+            class LookAndFeel(val name: String)
+                extends Section with OperatingSystemConstraints
             {
                 final val SectionName = "LookAndFeel"
 
                 lafs += this
 
-                final val Name = "name"
+                var params = Map.empty[String, String]
 
-                var params = MutableMap.empty[String, String]
-                var name: String = ""
-                var operatingSystems = new ListBuffer[String]
-
-                override def set(key: String, value: Any): Unit =
-                {
-                    (key, value) match
-                    {
-                        case (Name, s: String) =>
-                            name = s
-                        case (OS, s: String) =>
-                            operatingSystems += s
-                        case (n: String, v: String) =>
-                            params += (n -> v)
-                        case _ =>
-                            badField(key, value)
-                    }
-                }
 
                 def toXML =
                 {
                     <laf name={name}>
-                    {for (os <-operatingSystems) yield <os family={os}/>}
-                    {
-                        for ((name, value) <- params)
-                            yield <param name={name} value={value}/>
-                    }
+                        {operatingSystemsToXML}
                     </laf>
-                }
-            }
-
-            override def set(key: String, value: Any): Unit =
-            {
-                (key, value) match
-                {
-                    case (Height, i: Int)        => height = i
-                    case (Width, i: Int)         => width = i
-                    case (Resizable, b: Boolean) => resizable = b
-                    case _                       => badField(key, value)
                 }
             }
 
@@ -639,45 +569,54 @@ package org.clapper.sbtplugins.izpack
                 final val SectionName = "Panel"
 
                 final val Jar = "jar"
-                var jar: Option[Path] = None
+                var jarOption: Option[PathFinder] = None
+                var help: Map[String, Path] = Map.empty[String, Path]
 
                 panelClasses += this
 
-                override def set(key: String, value: Any): Unit =
-                {
-                    (key, value) match
+                def jar_=(p: PathFinder): Unit =
+                    p.get.size match
                     {
-                        case (Jar, p: Path) =>
-                            jar = Some(p)
-                        case (Jar, p: PathFinder) =>
-                            if (p.get.size == 0)
-                                badField(key, value, "No jar file found")
-                            if (p.get.size > 1)
-                                badField(key, value, "Too many jar files found")
-                            jar = Some(p.get.toList.head)
-                        case (Jar, s: String) =>
-                            jar = Some(Path.fromFile(new File(s)))
-                        case _ =>
-                            badField(key, value)
+                        case 0 => 
+                            throw new RuntimeException("No jar")
+                        case 1 => 
+                            jarOption = Some(p.get.toList.head)
+                        case _ => 
+                            throw new RuntimeException("Too many matching jars")
                     }
-                }
+
+                def jar: PathFinder = 
+                    jarOption.getOrElse(relPath("nothing.jar"))
 
                 def toXML =
                 {
-                    if (jar != None)
-                        <panel classname={name} jar={jar.get.toString}/>
-                    else
-                        <panel classname={name}/>
+                    val jarAttr =
+                    {
+                        jarOption match
+                        {
+                            case None    => ""
+                            case Some(p) => p.toString
+                        }
+                    }
+
+                    <panel classname={name} jar={jarAttr}>
+                    {
+                        if (help.size > 0)
+                        {
+                            for ((lang, path) <- help)
+                                yield <help iso3={lang} src={path.toString}/>
+                        }
+                        else
+                            new Comment("no help")
+                    }
+                    </panel>
                 }
             }
 
             def toXML =
             {
                 <panels>
-                {
-                    for (panel <- panelClasses)
-                        yield panel.toXML
-                }
+                {for (panel <- panelClasses) yield panel.toXML}
                 </panels>
             }
         }
@@ -695,7 +634,7 @@ package org.clapper.sbtplugins.izpack
             private var individualPacks = new ListBuffer[Pack]
 
             class Pack(val name: String)
-                extends Section
+                extends Section with OperatingSystemConstraints
             {
                 final val SectionName = "Pack"
 
@@ -704,94 +643,139 @@ package org.clapper.sbtplugins.izpack
                 final val FileSet = "fileset"
                 final val SingleFile = "singlefile"
 
-                private var isRequired = false
+                var required = false
+                var preselected = false
+                var hidden = false
+                var depends: List[Pack] = Nil
 
                 private var packInfos = new ListBuffer[PackInfo]
+                private var executables = new ListBuffer[Executable]
+                private var parsables = new ListBuffer[Parsable]
 
-                def required = isRequired = true
-
-                abstract class PackInfo
+                abstract class PackInfo 
+                    extends Section with OperatingSystemConstraints
                 {
                     packInfos += this
+                }
 
-                    var operatingSystems = new MutableSet[String]
-                    var isParsable = false
-                    var isExecutable = false
-                    var executableStage = "never"
+                object Overwrite extends Enumeration
+                {
+                    type Overwrite = Value
 
-                    def onlyFor(os: String) = operatingSystems += os
+                    val Yes = Value("true")
+                    val No = Value("false")
+                    val AskYes = Value("asktrue")
+                    val AskNo = Value("askfalse")
+                    val Update = Value("update")
                 }
 
                 class SingleFile(val source: Path, val target: String)
                     extends PackInfo
                 {
-                    def parsable = isParsable = true
-                    def executable(): Unit = executable("never")
-                    def executable(stage: String): Unit =
+                    final val SectionName = "SingleFile"
+
+                    def toXML =
                     {
-                        isExecutable = true
-                        executableStage = stage
+                        <singlefile src={source.toString}
+                                    target={target}>
+                          {operatingSystemsToXML}
+                        </singlefile>
                     }
                 }
 
-                class FileSet(val dir: Path,
-                              val includes: String,
-                              val targetdir: String)
+                class File(val source: Path, val targetdir: String)
                     extends PackInfo
+                {
+                    final val SectionName = "File"
+
+                    var unpack = false
+                    var overwrite = Overwrite.Update
+
+                    def toXML =
+                    {
+                        <file src={source.toString}
+                                 targetdir={targetdir}
+                                 unpack={yesno(unpack)}
+                                 override={overwrite.toString}>
+                          {operatingSystemsToXML}
+                        </file>
+                    }
+                }
+
+                class FileSet(val files: PathFinder, val targetdir: String)
+                    extends PackInfo
+                {
+                    final val SectionName = "FileSet"
+
+                    var overwrite = Overwrite.Update
+
+                    def toXML =
+                    {
+                        val nodes = 
+                        {
+                            for (path <- files.get)
+                                yield fileToXML(path)
+                        }.toList
+                        NodeSeq.fromSeq(nodes)
+                    }
+
+                    private def fileToXML(path: Path) =
+                    {
+                        <file src={path.toString}
+                              targetdir={targetdir}
+                              override={overwrite.toString}>
+                          {operatingSystemsToXML}
+                        </file>
+                    }
+                }
+
+                class Executable(val target: String, val stage: String)
+                    extends Section with OperatingSystemConstraints
+                {
+                    final val SectionName = "Executable"
+
+                    executables += this
+
+                    def this(target: String) = this(target, "never")
+
+                    def toXML =
+                    {
+                        <executable targetfile={target} stage={stage}>
+                            {operatingSystemsToXML}
+                        </executable>
+                    }
+                }
+
+                class Parsable(val target: String)
+                    extends Section with OperatingSystemConstraints
+                {
+                    final val SectionName = "Parsable"
+
+                    parsables += this
+
+                    def toXML =
+                    {
+                        <parsable targetfile={target}>
+                            {operatingSystemsToXML}
+                        </parsable>
+                    }
+                }
 
                 def toXML =
                 {
-                    def listOperatingSystems(packInfo: PackInfo) =
-                        for (os <- packInfo.operatingSystems)
-                            yield <os family={os}/>
-
-                    def packNode(packInfo: PackInfo) =
-                    {
-                        packInfo match
-                        {
-                            case s: SingleFile =>
-                                <singlefile src={s.source.absolutePath}
-                                            target={s.target}>
-                                  {listOperatingSystems(packInfo)}
-                                </singlefile>
-                                if (s.isParsable) parsableToXML(s)
-                                if (s.isExecutable) executableToXML(s)
-
-                            case f: FileSet =>
-                                <fileset dir={f.dir.absolutePath}
-                                         includes={f.includes}
-                                         targetdir={f.targetdir}>
-                                    {listOperatingSystems(packInfo)}
-                                </fileset>
-                            case _ =>
-                                assert(false)
-                                new Comment("huh? " + packInfo.getClass)
-                        }
-                    }
-
-                    def parsableToXML(p: SingleFile) =
-                    {
-                        assert(p.isParsable)
-                        <parsable targetfile={p.target}>
-                            {listOperatingSystems(p)}
-                        </parsable>
-                    }
-
-                    def executableToXML(e: SingleFile) =
-                    {
-                        assert(e.isExecutable)
-                        <executable targetfile={e.target}
-                                    stage={e.executableStage}>
-                            {listOperatingSystems(e)}
-                        </executable>
-                    }
-
                     <pack name={name} 
-                          required={if (isRequired) "yes" else "no"}>
-                    {
-                        for (packInfo <- packInfos)
-                            yield packNode(packInfo)
-                    }
+                          required={yesno(required)}
+                          hidden={yesno(hidden)}
+                          preselected={yesno(preselected)}>
+                        {operatingSystemsToXML}
+                        {
+                            for (dep <- depends)
+                                yield <depends packname={dep.name}/>
+                        }
+                        {
+                            for (packInfo <- packInfos)
+                                yield packInfo.toXML
+                        }
                     </pack>
                 }
             }
