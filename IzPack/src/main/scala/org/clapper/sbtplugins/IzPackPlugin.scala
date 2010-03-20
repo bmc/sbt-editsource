@@ -142,11 +142,11 @@ package org.clapper.sbtplugins.izpack
         protected def setOption(name: String, value: String) =
             options += name -> value.toOption
 
-        protected def optionToString(o: Option[String]) =
-            if (o == None) "" else o.get
-
         protected def getOption(name: String) =
             optionToString(options.getOrElse(name, None))
+
+        protected def optionToString(o: Option[String]) =
+            if (o == None) "" else o.get
 
         protected def strOptToXMLAttrValue(name: String): String =
             options.getOrElse(name, Some("")).get
@@ -302,6 +302,7 @@ package org.clapper.sbtplugins.izpack
         final val MacOSX  = Darwin
         final val Unix    = "unix"
         final val OS = "os"
+        final val Id = "id"
 
         private var theInfo: Option[Info] = None
         var languages: List[String] = Nil
@@ -537,35 +538,52 @@ package org.clapper.sbtplugins.izpack
 
             resources = Some(this)
 
-            final val LicensePanel = "HTMLLicensePanel.license"
-            final val InfoPanel = "HTMLInfoPanel.info"
-            final val Logo = "Installer.image"
-
-            private var licensePath: Option[Path] = None
-            private var infoPath: Option[Path] = None
-            private var imagePath: Option[Path] = None
             private var installDirectory = new InstallDirectory
+            private var individualResources = new ListBuffer[Resource]
 
-            private val paths = MutableMap.empty[String, Option[Path]]
+            class Resource extends Section with OptionStrings
+            {
+                final val SectionName = "Resource"
 
-            private def setPath(name: String, value: Path) =
-                paths += name -> Some(value)
+                individualResources += this
 
-            private def getPath(name: String): Path =
-                paths.getOrElse(name, None) match
+                private var srcOption: Option[Path] = None
+
+                object ParseType extends Enumeration
                 {
-                    case None => relPath("nothing")
-                    case Some(p) => p
+                    type ParseType = Value
+
+                    val JavaProperties = Value("javaprop")
+                    val XML = Value("xml")
+                    val Plain = Value("plain")
+                    val Java = Value("Java")
+                    val Shell = Value("Shell")
+                    val Ant = Value("Ant")
                 }
 
-            def licensePanel_=(p: Path): Unit = setPath(LicensePanel, p)
-            def licensePanel: Path = getPath(LicensePanel)
+                import ParseType._
 
-            def infoPanel_=(p: Path): Unit = setPath(InfoPanel, p)
-            def infoPanel: Path = getPath(InfoPanel)
+                var parse: Boolean = false
+                val parseType: ParseType = ParseType.Plain
 
-            def logo_=(p: Path): Unit = setPath(Logo, p)
-            def logo: Path = getPath(Logo)
+                def id_=(s: String): Unit = setOption(Id, s)
+                def id: String = getOption(Id)
+
+                def source_=(p: Path): Unit = srcOption = Some(p)
+                def source: Path = srcOption.getOrElse(relPath("."))
+
+                protected def sectionToXML =
+                {
+                    val idString = getOption(Id)
+                    if ((idString == "") || (srcOption == None))
+                        throw new RuntimeException("id and source are " +
+                                                   "mandatory for Resource")
+
+                    <res id={getOption(idString)} 
+                         src={srcOption.get.toString}
+                         parse={yesno(parse)}/>
+                }
+            }
 
             class InstallDirectory
             {
@@ -607,20 +625,9 @@ package org.clapper.sbtplugins.izpack
             protected def sectionToXML =
             {
                 <resources>
-                {pathToXML(LicensePanel)}
-                {pathToXML(Logo)}
-                {pathToXML(InfoPanel)}
+                {for (res <- individualResources) yield res.toXML}
                 {installDirectory.toXML}
                 </resources>
-            }
-
-            private def pathToXML(id: String) =
-            {
-                paths.getOrElse(id, None) match
-                {
-                    case None    =>  new Comment("no " + id + " resource")
-                    case Some(p) => <res id={id} src={p.toString}/>
-                }
             }
         }
 
@@ -785,12 +792,12 @@ package org.clapper.sbtplugins.izpack
                 final val SectionName = "Panel"
 
                 final val Jar = "jar"
-                final val Id = "id"
 
-                var jarOption: Option[PathFinder] = None
+                var jarOption: Option[Path] = None
                 var help: Map[String, Path] = Map.empty[String, Path]
 
                 private var actions = new ListBuffer[Action]
+                private var validators = new ListBuffer[Validator]
 
                 def id_=(s: String): Unit = setOption(Id, s)
                 def id: String = getOption(Id)
@@ -798,29 +805,30 @@ package org.clapper.sbtplugins.izpack
                 panelClasses += this
 
                 /**
+                 * Validators
+                 */
+                class Validator(val classname: String)
+                {
+                    validators += this
+
+                    def toXML = <validator classname={classname}/>
+                }
+
+                /**
                  * Embedded actions.
                  */
                 class Action(val stage: String, val classname: String)
                 {
                     actions += this
+
+                    def toXML = <action stage={stage} classname={classname}/>
                 }
 
                 /**
                  * Allows assignment of `jar` field
                  */
-                def jar_=(p: PathFinder): Unit =
-                    p.get.size match
-                    {
-                        case 0 => 
-                            throw new RuntimeException("No jar")
-                        case 1 => 
-                            jarOption = Some(p.get.toList.head)
-                        case _ => 
-                            throw new RuntimeException("Too many matching jars")
-                    }
-
-                def jar: PathFinder = 
-                    jarOption.getOrElse(relPath("nothing.jar"))
+                def jar_=(p: Path): Unit = jarOption = Some(p)
+                def jar: Path = jarOption.getOrElse(relPath("nothing.jar"))
 
                 protected def sectionToXML =
                 {
@@ -845,14 +853,16 @@ package org.clapper.sbtplugins.izpack
                             new Comment("no help")
                     }
                     {
+                        if (validators.size > 0)
+                            for (v <- validators) yield v.toXML
+                        else
+                            new Comment("no validators")
+                    }                            
+                    {
                         if (actions.size > 0)
                         {
                             <actions>
-                            {
-                                for (a <- actions)
-                                    yield <action stage={a.stage}
-                                                  classname={a.classname}/>
-                            }
+                            {for (a <- actions) yield a.toXML}
                             </actions>
                         }
                         else
