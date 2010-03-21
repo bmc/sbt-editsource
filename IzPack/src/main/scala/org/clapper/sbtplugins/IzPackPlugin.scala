@@ -970,6 +970,7 @@ package org.clapper.sbtplugins.izpack
                     final val SectionName = "FileSet"
 
                     var overwrite = Overwrite.Update
+                    var unpack = false
 
                     filesets += this
 
@@ -987,6 +988,7 @@ package org.clapper.sbtplugins.izpack
                     {
                         <file src={path.absolutePath}
                               targetdir={targetdir}
+                              unpack={yesno(unpack)}
                               override={overwrite.toString}>
                           {operatingSystemsToXML}
                         </file>

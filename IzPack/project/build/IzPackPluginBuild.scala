@@ -6,7 +6,7 @@ class IzPackPluginProject(info: ProjectInfo) extends PluginProject(info)
                                Dependencies
     \* ---------------------------------------------------------------------- */
 
-    val izPack = "org.codehaus.izpack" % "izpack-standalone-compiler" % "4.3.1"
+    val izPack = "org.codehaus.izpack" % "izpack-standalone-compiler" % "4.3.2"
 
     /* ---------------------------------------------------------------------- *\
                                 Publishing
