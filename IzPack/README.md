@@ -39,6 +39,10 @@ Then, within the `izpack` project directory, publish it locally:
 
 ## Using the Plugin
 
+Please see [the IzPack Plugin web site][izpack-plugin-page] for detailed usage instructions.
+
+[wiki-izpack-plugin]: http://wiki.github.com/bmc/sbt-plugins/izpackplugin
+
 Regardless of how you get the plugin, here's how to use it in your SBT
 project.
 

@@ -206,7 +206,7 @@ package org.clapper.sbtplugins.izpack
          * @param str   the string to write
          */
         protected def writeStringToFile(path: Path, str: String): Unit =
-            writeStringToFile(path.toString, str)
+            writeStringToFile(path.absolutePath, str)
 
         /**
          * Writes a string to a file, overwriting the file.
@@ -405,7 +405,7 @@ package org.clapper.sbtplugins.izpack
             import Path._
 
             log.info("Creating " + workingInstallDir)
-            new File(workingInstallDir.absolutePath.toString).mkdirs()
+            new File(workingInstallDir.absolutePath).mkdirs()
             log.info("Generating " + installXMLPath)
             val xml = toXML
             val prettyPrinter = new PrettyPrinter(256, 2)
@@ -579,8 +579,8 @@ package org.clapper.sbtplugins.izpack
                         throw new RuntimeException("id and source are " +
                                                    "mandatory for Resource")
 
-                    <res id={getOption(idString)} 
-                         src={srcOption.get.toString}
+                    <res id={idString} 
+                         src={srcOption.get.absolutePath}
                          parse={yesno(parse)}/>
                 }
             }
@@ -618,7 +618,7 @@ package org.clapper.sbtplugins.izpack
                     val fullPath = workingInstallDir / filename
                     // Put the string in the file. That's how IzPack wants it.
                     writeStringToFile(fullPath, path)
-                    fullPath.toString
+                    fullPath.absolutePath
                 }
             }
 
@@ -837,7 +837,7 @@ package org.clapper.sbtplugins.izpack
                         jarOption match
                         {
                             case None    => ""
-                            case Some(p) => p.toString
+                            case Some(p) => p.absolutePath
                         }
                     }
 
@@ -847,7 +847,8 @@ package org.clapper.sbtplugins.izpack
                         if (help.size > 0)
                         {
                             for ((lang, path) <- help)
-                                yield <help iso3={lang} src={path.toString}/>
+                                yield <help iso3={lang} 
+                                            src={path.absolutePath}/>
                         }
                         else
                             new Comment("no help")
@@ -907,6 +908,7 @@ package org.clapper.sbtplugins.izpack
                 var preselected = false
                 var hidden = false
                 var depends: List[Pack] = Nil
+                var description = name
 
                 private var files = new ListBuffer[OneFile]
                 private var filesets = new ListBuffer[FileSet]
@@ -936,7 +938,7 @@ package org.clapper.sbtplugins.izpack
 
                     protected def sectionToXML =
                     {
-                        <singlefile src={source.toString}
+                        <singlefile src={source.absolutePath}
                                     target={target}>
                           {operatingSystemsToXML}
                         </singlefile>
@@ -953,7 +955,7 @@ package org.clapper.sbtplugins.izpack
 
                     protected def sectionToXML =
                     {
-                        <file src={source.toString}
+                        <file src={source.absolutePath}
                                  targetdir={targetdir}
                                  unpack={yesno(unpack)}
                                  override={overwrite.toString}>
@@ -983,7 +985,7 @@ package org.clapper.sbtplugins.izpack
 
                     private def fileToXML(path: Path) =
                     {
-                        <file src={path.toString}
+                        <file src={path.absolutePath}
                               targetdir={targetdir}
                               override={overwrite.toString}>
                           {operatingSystemsToXML}
@@ -1029,6 +1031,7 @@ package org.clapper.sbtplugins.izpack
                           required={yesno(required)}
                           hidden={yesno(hidden)}
                           preselected={yesno(preselected)}>
+                        <description>{description}</description>
                         {operatingSystemsToXML}
                         {
                             for (dep <- depends)
@@ -1036,6 +1039,8 @@ package org.clapper.sbtplugins.izpack
                         }
                         {for (f <- files) yield f.toXML}
                         {for (fs <- filesets) yield fs.toXML}
+                        {for (p <- parsables) yield p.toXML}
+                        {for (e <- executables) yield e.toXML}
                     </pack>
                 }
             }

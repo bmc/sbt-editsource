@@ -13,10 +13,13 @@ file in subdirectory for details on its plugin.
 Current plugins included in this repository:
 
 * EditSource: Edit a source (file or string), applying substitutions.
-* IzPack: Run the [IzPack][izpack] installer generator within SBT.
+* IzPack: Run the [IzPack][izpack] installer generator within SBT. Additional
+  detailed information on this plugin is available on the plugin's
+  [web page][izpack-plugin-page].
 * Markdown: Run Markdown on a source file, producing an HTML document.
 
 [izpack]: http://izpack.org/
+[wiki-izpack-page]: http://bmc.github.com/sbt-plugins/izpack.html
 
 License
 -------
