@@ -143,13 +143,13 @@ package org.clapper.sbtplugins.izpack
             options += name -> value.toOption
 
         protected def getOption(name: String) =
+            options.getOrElse(name, None)
+
+        protected def getOptionString(name: String) =
             optionToString(options.getOrElse(name, None))
 
         protected def optionToString(o: Option[String]) =
             if (o == None) "" else o.get
-
-        protected def strOptToXMLAttrValue(name: String): String =
-            options.getOrElse(name, Some("")).get
 
         protected def strOptToXMLElement(name: String): Node =
             options.getOrElse(name, None) match
@@ -296,8 +296,20 @@ package org.clapper.sbtplugins.izpack
     {
         final val SectionName = "IzPackConfig"
 
+        object ParseType extends Enumeration
+        {
+            type ParseType = Value
+
+            val JavaProperties = Value("javaprop")
+            val XML = Value("xml")
+            val Plain = Value("plain")
+            val Java = Value("Java")
+            val Shell = Value("Shell")
+            val Ant = Value("Ant")
+        }
+
         final val Windows = "windows"
-        final val Darwin  = "darwin"
+        final val Darwin  = "macosx"
         final val MacOS   = Darwin
         final val MacOSX  = Darwin
         final val Unix    = "unix"
@@ -463,25 +475,25 @@ package org.clapper.sbtplugins.izpack
 
             def summaryLogFilePath_=(s: String): Unit =
                 setOption(SummaryLogFilePath, s)
-            def summaryLogFilePath: String = getOption(SummaryLogFilePath)
+            def summaryLogFilePath: String = getOptionString(SummaryLogFilePath)
 
             def url_=(u: String): Unit = setOption(URL, u)
-            def url: String = getOption(URL)
+            def url: String = getOptionString(URL)
 
             def javaVersion_=(v: String): Unit = setOption(JavaVersion, v)
-            def javaVersion: String = getOption(JavaVersion)
+            def javaVersion: String = getOptionString(JavaVersion)
 
             def appName_=(v: String): Unit = setOption(AppName, v)
-            def appName: String = getOption(AppName)
+            def appName: String = getOptionString(AppName)
 
             def appVersion_=(v: String): Unit = setOption(AppVersion, v)
-            def appVersion: String = getOption(AppVersion)
+            def appVersion: String = getOptionString(AppVersion)
 
             def appSubPath_=(v: String): Unit = setOption(AppSubpath, v)
-            def appSubPath: String = getOption(AppSubpath)
+            def appSubPath: String = getOptionString(AppSubpath)
 
             def webdir_=(v: String): Unit = setOption(WebDir, v)
-            def webdir: String = getOption(WebDir)
+            def webdir: String = getOptionString(WebDir)
 
             protected def sectionToXML =
             {
@@ -549,39 +561,28 @@ package org.clapper.sbtplugins.izpack
 
                 private var srcOption: Option[Path] = None
 
-                object ParseType extends Enumeration
-                {
-                    type ParseType = Value
-
-                    val JavaProperties = Value("javaprop")
-                    val XML = Value("xml")
-                    val Plain = Value("plain")
-                    val Java = Value("Java")
-                    val Shell = Value("Shell")
-                    val Ant = Value("Ant")
-                }
-
                 import ParseType._
 
                 var parse: Boolean = false
                 val parseType: ParseType = ParseType.Plain
 
                 def id_=(s: String): Unit = setOption(Id, s)
-                def id: String = getOption(Id)
+                def id: String = getOptionString(Id)
 
                 def source_=(p: Path): Unit = srcOption = Some(p)
                 def source: Path = srcOption.getOrElse(relPath("."))
 
                 protected def sectionToXML =
                 {
-                    val idString = getOption(Id)
+                    val idString = getOptionString(Id)
                     if ((idString == "") || (srcOption == None))
                         throw new RuntimeException("id and source are " +
                                                    "mandatory for Resource")
 
                     <res id={idString} 
                          src={srcOption.get.absolutePath}
-                         parse={yesno(parse)}/>
+                         parse={yesno(parse)}
+                         type={parseType.toString}/>
                 }
             }
 
@@ -800,7 +801,7 @@ package org.clapper.sbtplugins.izpack
                 private var validators = new ListBuffer[Validator]
 
                 def id_=(s: String): Unit = setOption(Id, s)
-                def id: String = getOption(Id)
+                def id: String = getOptionString(Id)
 
                 panelClasses += this
 
@@ -873,7 +874,7 @@ package org.clapper.sbtplugins.izpack
                     </panel>
 
                     elem.addAttr("jar", jarAttr)
-                        .addAttr("id", strOptToXMLAttrValue(Id))
+                        .addAttr("id", getOption(Id))
                 }
             }
 
@@ -998,16 +999,41 @@ package org.clapper.sbtplugins.izpack
                 class Executable(val target: String, val stage: String)
                     extends Section with OperatingSystemConstraints
                 {
+                    import Implicits._
+
                     final val SectionName = "Executable"
 
+                    object FailureType extends Enumeration
+                    {
+                        type FailureType = Value
+
+                        val Abort = Value("abort")
+                        val Ask = Value("ask")
+                        val Warn = Value("warn")
+                    }
+
                     executables += this
+
+                    import FailureType._
+
+                    val args: List[String] = Nil
+                    val keep = true
+                    val failure = FailureType.Ask
 
                     def this(target: String) = this(target, "never")
 
                     protected def sectionToXML =
                     {
-                        <executable targetfile={target} stage={stage}>
+                        <executable targetfile={target} stage={stage}
+                                    keep={keep.toString}
+                                    failure={failure.toString}>
                             {operatingSystemsToXML}
+                            {
+                                if (args.length == 0)
+                                    new Comment("No args")
+                                else
+                                    for (a <- args) yield <arg value={a}/>
+                            }
                         </executable>
                     }
                 }
@@ -1015,13 +1041,19 @@ package org.clapper.sbtplugins.izpack
                 class Parsable(val target: String)
                     extends Section with OperatingSystemConstraints
                 {
+                    import Implicits._
+
                     final val SectionName = "Parsable"
 
                     parsables += this
 
+                    import ParseType._
+
+                    val parseType: ParseType = ParseType.Plain
+
                     protected def sectionToXML =
                     {
-                        <parsable targetfile={target}>
+                        <parsable targetfile={target} type={parseType.toString}>
                             {operatingSystemsToXML}
                         </parsable>
                     }
@@ -1123,7 +1155,8 @@ package org.clapper.sbtplugins
                         CompilerConfig.STANDARD,
                         installerJar.absolutePath
                     )
-                log.info("Creating installer in " + installerJar)
+                log.info("Creating installer in " + installerJar + " from " +
+                         installConfig)
                 compilerConfig.executeCompiler
                 None
             }
