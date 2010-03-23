@@ -4,7 +4,9 @@
 
 import sbt._
 
-class SBTPluginsProject(info: ProjectInfo) extends ParentProject(info)
+class SBTPluginsProject(info: ProjectInfo)
+    extends ParentProject(info)
+    with posterous.Publish
 {
     /* ---------------------------------------------------------------------- *\
                                 Subprojects
