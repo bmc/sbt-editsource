@@ -39,68 +39,9 @@ Then, within the `izpack` project directory, publish it locally:
 
 ## Using the Plugin
 
-Please see [the IzPack Plugin web site][izpack-plugin-page] for detailed usage instructions.
+Please see [the IzPack Plugin web site][] for detailed usage instructions.
 
-[wiki-izpack-plugin]: http://wiki.github.com/bmc/sbt-plugins/izpackplugin
-
-Regardless of how you get the plugin, here's how to use it in your SBT
-project.
-
-First, in your `project/plugins/Plugins.scala` file, add the following
-line, which will ensure that the IzPack compiler is available to your
-build script:
-
-    val izPack = "org.codehaus.izpack" % "izpack-standalone-compiler" % "4.3.1"
-
-Next, create a project build file in `project/build/`, if you haven't done
-that already. Then, ensure that the project mixes in `IzPackPlugin`. Once
-you've done that, you can use the plugin's `izpackMakeInstaller()` method.
-
-The `izpackMakeInstaller()` method takes, as input:
-
-* The [IzPack installation configuration][izpack-install] file, an XML file
-  that tells IzPack how to build the installer. You can either use a
-  canned file, or you can create one from a template. (I typically create one
-  from a template, using the [EditSource][editsource] SBT plugin to fill in
-  various things, such as jar files, directory names, etc.)
-* The path (as an SBT `Path` object) to the target installer jar file to be
-  created.
-
-[izpack-install]: http://izpack.org/documentation/installation-files.html
-[editsource]: http://github.com/bmc/sbt-plugins/tree/master/editsource/
-
-Here's an example:
-
-    import sbt_
-    import org.clapper.sbtplugins.IzPackPlugin
-
-    class MyProject(info: ProjectInfo) 
-        extends DefaultProject with IzPackPlugin with EditSourcePlugin
-    {
-        val installTemplate = "src" / "main" / "izpack" / "install.xml"
-        FileUtilities.withTemporaryDirectory(log)
-        {
-            jarDir =>
-
-            val jars = (("lib" +++ "lib_managed") ** 
-                        ("*.jar") - "scalatest*.jar"
-                                  - "scala-library*.jar"
-                                  - "scala-compiler.jar"
-                                  - "izpack*.jar")
-            FileUtilities.copyFlat(jars.get, Path.fromFile(jarDir), log)
-
-            val installFile = File.createTempFile("inst", ".xml")
-            installFile.deleteOnExit
-            editSourceToFile(Source.fromFile(installTemplate.absolutePath),
-                             Map("EXTRA_JARS_DIR" -> jarDir.getPath,
-                                 "DOCS_DIR" -> ("src" / "docs").absolutePath),
-                             installFile)
-            izpackMakeINstaller(Path.fromFile(installFile),
-                                "target" / "installer.jar")
-        }
-
-        None
-    }
+[the IzPack Plugin web site]: http://bmc.github.com/sbt-plugins/izpack.html
 
 ## License
 
