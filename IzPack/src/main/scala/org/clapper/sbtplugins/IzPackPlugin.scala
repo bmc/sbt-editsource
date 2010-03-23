@@ -44,6 +44,19 @@ package org.clapper.sbtplugins.izpack
     import sbt._
     import java.io.File
 
+    /*-------------------------------------------------------------------*\
+                                Exceptions
+    \*-------------------------------------------------------------------*/
+
+    private[izpack] class IzPluginException(msg: String) extends Exception(msg)
+
+    private[izpack] class MissingFieldException(name: String)
+        extends IzPluginException("Missing required \"" + name + "\" field")
+
+    /*-------------------------------------------------------------------*\
+                           Traits and Utilities
+    \*-------------------------------------------------------------------*/
+
     /**
      * Implemented by config-related classes that can take an operating
      * system constraint. Assumes that the resulting XML can contain
@@ -150,6 +163,14 @@ package org.clapper.sbtplugins.izpack
 
         protected def optionToString(o: Option[String]) =
             if (o == None) "" else o.get
+
+        protected def stringOptionIsRequired(name: String) =
+            options.getOrElse(name, None) match
+            {
+                case None =>
+                    throw new MissingFieldException(name)
+                case _ =>
+            }
 
         protected def strOptToXMLElement(name: String): Node =
             options.getOrElse(name, None) match
@@ -277,7 +298,6 @@ package org.clapper.sbtplugins.izpack
          * Convert a boolean value to a "yes" or "no" string
          */
         protected def yesno(b: Boolean): String = if (b) "yes" else "no"
-
     }
 
     /*-------------------------------------------------------------------*\
@@ -340,8 +360,8 @@ package org.clapper.sbtplugins.izpack
                     None
 
                 case (Some(t), Some(v)) =>
-                    throw new RuntimeException("You may specify only one " +
-                                               t.SectionName + " object.")
+                    throw new IzPluginException("Only one " + t.SectionName + 
+                                                " object is allowed.")
 
                 case (None, Some(v)) =>
                     newValue
@@ -449,7 +469,7 @@ package org.clapper.sbtplugins.izpack
 
             info = Some(this)
 
-            var useUninstaller = true
+            var createUninstaller = true
             var requiresJDK = false
             var runPrivileged = false
             var pack200 = false
@@ -466,7 +486,6 @@ package org.clapper.sbtplugins.izpack
             private val SummaryLogFilePath = "summarylogfilepath"
 
             setOption(JavaVersion, "1.6")
-            setOption(AppName, "Hey I need a name!")
 
             def author(name: String): Unit =
                 author(name, "")
@@ -497,6 +516,8 @@ package org.clapper.sbtplugins.izpack
 
             protected def sectionToXML =
             {
+                stringOptionIsRequired(AppName)
+
                 <info>
                     <appname>{appName}</appname>
                     {strOptToXMLElement(AppVersion)}
@@ -509,7 +530,7 @@ package org.clapper.sbtplugins.izpack
                         {yesno(writeInstallationInfo)}
                     </writeinstallationinformation>
                     <requiresjdk>{yesno(requiresJDK)}</requiresjdk>
-                    {maybeXML("uninstaller", useUninstaller, 
+                    {maybeXML("uninstaller", createUninstaller, 
                               Map("write" -> "yes"))}
                     {maybeXML("run-privileged", runPrivileged)}
                     {maybeXML("pack200", pack200)}
@@ -535,10 +556,6 @@ package org.clapper.sbtplugins.izpack
                 }
             }
         }
-
-        /*------------------------------------------------------------------*\
-                                     <locale>
-        \*------------------------------------------------------------------*/
 
         /*------------------------------------------------------------------*\
                                     <resources>
@@ -574,10 +591,11 @@ package org.clapper.sbtplugins.izpack
 
                 protected def sectionToXML =
                 {
+                    stringOptionIsRequired(Id)
+                    if (srcOption == None)
+                        throw new MissingFieldException("source")
+
                     val idString = getOptionString(Id)
-                    if ((idString == "") || (srcOption == None))
-                        throw new RuntimeException("id and source are " +
-                                                   "mandatory for Resource")
 
                     <res id={idString} 
                          src={srcOption.get.absolutePath}
@@ -749,7 +767,6 @@ package org.clapper.sbtplugins.izpack
 
                 var params = Map.empty[String, String]
 
-
                 protected def sectionToXML =
                 {
                     <laf name={name}>
@@ -793,6 +810,7 @@ package org.clapper.sbtplugins.izpack
                 final val SectionName = "Panel"
 
                 final val Jar = "jar"
+                final val Condition = "condition"
 
                 var jarOption: Option[Path] = None
                 var help: Map[String, Path] = Map.empty[String, Path]
@@ -802,6 +820,9 @@ package org.clapper.sbtplugins.izpack
 
                 def id_=(s: String): Unit = setOption(Id, s)
                 def id: String = getOptionString(Id)
+
+                def condition_=(s: String): Unit = setOption(condition, s)
+                def condition: String = getOptionString(condition)
 
                 panelClasses += this
 
@@ -875,6 +896,7 @@ package org.clapper.sbtplugins.izpack
 
                     elem.addAttr("jar", jarAttr)
                         .addAttr("id", getOption(Id))
+                        .addAttr("condition", getOption(Condition))
                 }
             }
 
