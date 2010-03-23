@@ -39,9 +39,9 @@ Then, within the `izpack` project directory, publish it locally:
 
 ## Using the Plugin
 
-Please see [the IzPack Plugin web site][] for detailed usage instructions.
+Please see the [IzPack Plugin web site][] for detailed usage instructions.
 
-[the IzPack Plugin web site]: http://bmc.github.com/sbt-plugins/izpack.html
+[IzPack Plugin web site]: http://bmc.github.com/sbt-plugins/izpack.html
 
 ## License
 

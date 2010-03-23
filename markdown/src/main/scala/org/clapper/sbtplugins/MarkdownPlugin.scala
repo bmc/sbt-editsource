@@ -75,6 +75,7 @@ trait MarkdownPlugin extends DefaultProject
                        Managed External Dependencies
     \* ---------------------------------------------------------------------- */
 
+    val rhino = "rhino" % "js" % "1.7R2"
     val ShowdownURL = "http://attacklab.net/showdown/showdown-v0.9.zip"
     val ShowdownLocal = MarkdownLibDir / "showdown.js"
 

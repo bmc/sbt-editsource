@@ -12,11 +12,9 @@ class IzPackPluginProject(info: ProjectInfo) extends PluginProject(info)
                                 Publishing
     \* ---------------------------------------------------------------------- */
 
-    // "publish" will prompt (via a Swing pop-up) for the username and
-    // password.
-    val publishTo = Resolver.sftp("clapper.org Maven Repo",
-                                  "maven.clapper.org",
-                                  "/var/www/maven.clapper.org/html")
+    // Enable publishing in this subproject, with no dependencies on other
+    // subprojects. For more details, see the relevent SBT wiki section:
+    // http://code.google.com/p/simple-build-tool/wiki/SubProjects
 
-    override def managedStyle = ManagedStyle.Maven
+    override def deliverProjectDependencies = Nil
 }

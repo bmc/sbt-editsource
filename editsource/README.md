@@ -3,97 +3,22 @@ Edit Source SBT Plugin
 
 ## Introduction
 
-This project contains an "edit source" plugin for the [SBT][sbt] build
-tool. This plugin provides a method that offers a similar substitution
-facility to the one available with an [Ant's][ant] `filterset`. That is, it
-edits a source (a file, a string--anything that can be wrapped in a Scala
-`Source` object), substituting variable references. Variable references
-look like _@var@_. A map supplies values for the variables. Any variable
-that isn't found in the map is silently ignored.
+This project contains an "edit source" plugin for the [SBT][] build tool.
+This plugin provides a method that offers a similar substitution facility
+to the one available with an [Ant] `filterset`. That is, it edits a source
+(a file, a string--anything that can be wrapped in a Scala `Source`
+object), substituting variable references. Variable references look like
+_@var@_. A map supplies values for the variables. Any variable that isn't
+found in the map is silently ignored.
 
-[sbt]: http://code.google.com/p/simple-build-tool/
-[ant]: http://ant.apache.org/
-
-## Getting this Plugin
-
-### The Released Version
-
-In your own project, create a `project/plugins/Plugins.scala` file (if you
-haven't already), and add the following lines, to make the project available
-to your SBT project:
-
-    val orgClapperMavenRepo = "clapper.org Maven Repo" at "http://maven.clapper.org/"
-
-    val editsource = "org.clapper" % "sbt-editsource-plugin" % "0.1"
-
-### The Development Version
-
-You can also use the development version of this plugin (that is, the
-version checked into the [GitHub repository][github-repo]), by building it
-locally.
-
-First, download the plugin's source code by cloning this repository.
-
-    git clone http://github.com/bmc/sbt-plugins.git
-
-Then, within the `editsource` project directory, publish it locally:
-
-    sbt update publish-local
-
-[github-repo]: http://github.com/bmc/sbt-plugins
+[SBT]: http://code.google.com/p/simple-build-tool/
+[Ant]: http://ant.apache.org/
 
 ## Using the Plugin
 
-Regardless of how you get the plugin, here's how to use it in your SBT
-project.
+Please see the [EditSource Plugin web site][] for detailed usage instructions.
 
-Create a project build file in `project/build/', if you haven't already.
-Then, ensure that the project mixes in `MarkdownPlugin`. You have to ensure
-that you hook in the Markdown plugin's `update` and `clean-lib` logic, as
-shown below. Once you've done that, you can use the plugin's
-`editSourceToFile()` and `editSourceToList()` methods.
-
-### Example
-
-This example assumes you have a file called `install.properties` that is
-used to configure some (fictitious) installer program; you want to
-substitute some values within that file, based on settings in your build
-file. The file might look something like this:
-
-    main.jar: @JAR_FILE@
-    docs.directory: @DOCS_DIR@
-    package.name: @PACKAGE_NAME@
-    package.version: @PACKAGE_VERSION@
-
-
-The EditSource plugin can be used to edit the _@VAR@_ references within the
-file, as shown here.
-
-    import sbt_
-    import org.clapper.sbtplugins.EditFilePlugin
-
-    class MyProject(info: ProjectInfo) extends DefaultProject with EditSourcePlugin
-    {
-        val installCfgSource = "src" / "installer" / "install.properties"
-        val vars = Map(
-            "JAR_FILE" -> jarPath.absolutePath,
-            "DOCS_DIR" -> ("src" / "docs").absolutePath,
-            "PACKAGE_NAME" -> "My Project",
-            "PACKAGE_VERSION" -> projectVersion.value.toString
-        ) 
-
-        import java.io.File
-        val temp = File.createTempFile("inst", "properties")
-        temp.deleteOnExit
-        editSourceToFile(Source.fromFile(installCfgSource.absolutePath, temp)
-        runInstaller(temp)
-        temp.delete
-
-        private def runInstaller(configFile: File) =
-        {
-            ...
-        }
-    }
+[EditSource Plugin web site]: http://bmc.github.com/sbt-plugins/editsource.html
 
 ## License
 
