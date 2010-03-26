@@ -70,8 +70,8 @@ package org.clapper.sbtplugins.izpack
             for (os <- osNames)
                 operatingSystems += os
 
-        def operatingSystemsToXML =
-            for (os <- operatingSystems) yield <os family={os}/>
+        def operatingSystemsToXML = 
+            operatingSystems.map(os => <os family={os}/>)
     }
 
     /**
@@ -399,9 +399,8 @@ package org.clapper.sbtplugins.izpack
         private def languagesToXML =
         {
             val langs = if (languages == Nil) List("eng") else languages
-            <locale>
-            {for (name <- languages) yield <langpack iso3={name}/>}
-            </locale>
+
+            <locale> {languages.map(name => <langpack iso3={name}/>)} </locale>
         }
 
         protected def sectionToXML =
@@ -459,6 +458,8 @@ package org.clapper.sbtplugins.izpack
                     case None    => name
                     case Some(e) => name + " at " + e
                 }
+
+            def toXML = <author name={name} email={email.getOrElse("")}/>
         }
 
         class Info extends Section with OptionStrings
@@ -541,19 +542,9 @@ package org.clapper.sbtplugins.izpack
             private def authorsToXML =
             {
                 if (authors.size > 0)
-                {
-                    <authors>
-                    {
-                        for (author <- authors)
-                        yield <author name={author.name}
-                                      email={author.email.getOrElse("")}/>
-                    }
-                    </authors>
-                }
+                    <authors> {authors.map(_.toXML)} </authors>
                 else
-                {
                     new Comment("no authors")
-                }
             }
         }
 
@@ -642,12 +633,7 @@ package org.clapper.sbtplugins.izpack
             }
 
             protected def sectionToXML =
-            {
-                <resources>
-                {for (res <- individualResources) yield res.toXML}
-                {installDirectory.toXML}
-                </resources>
-            }
+                <resources> {individualResources.map(_.toXML)} </resources>
         }
 
         /*------------------------------------------------------------------*\
@@ -781,7 +767,7 @@ package org.clapper.sbtplugins.izpack
 
                 <guiprefs height={height.toString} width={width.toString}
                           resizable={yesno(resizable)}>
-                {for (laf <- lafs) yield laf.toXML}
+                  {lafs.map(_.toXML)}
                 </guiprefs>
             }
         }
@@ -877,17 +863,13 @@ package org.clapper.sbtplugins.izpack
                     }
                     {
                         if (validators.size > 0)
-                            for (v <- validators) yield v.toXML
+                            validators.map(_.toXML)
                         else
                             new Comment("no validators")
                     }                            
                     {
                         if (actions.size > 0)
-                        {
-                            <actions>
-                            {for (a <- actions) yield a.toXML}
-                            </actions>
-                        }
+                            <actions>{actions.map(_.toXML)}</actions>
                         else
                             new Comment("no actions")
                     }
@@ -901,11 +883,7 @@ package org.clapper.sbtplugins.izpack
             }
 
             protected def sectionToXML =
-            {
-                <panels>
-                {for (panel <- panelClasses) yield panel.toXML}
-                </panels>
-            }
+                <panels> {panelClasses.map(_.toXML)} </panels>
         }
 
         /*------------------------------------------------------------------*\
@@ -999,12 +977,8 @@ package org.clapper.sbtplugins.izpack
 
                     def toXML =
                     {
-                        val nodes = 
-                        {
-                            for (path <- files.get)
-                                yield fileToXML(path)
-                        }.toList
-                        NodeSeq.fromSeq(nodes)
+                        val nodes = files.get.map(path => fileToXML(path))
+                        NodeSeq.fromSeq(nodes.toList)
                     }
 
                     private def fileToXML(path: Path) =
@@ -1054,7 +1028,7 @@ package org.clapper.sbtplugins.izpack
                                 if (args.length == 0)
                                     new Comment("No args")
                                 else
-                                    for (a <- args) yield <arg value={a}/>
+                                    args.map(a => <arg value={a}/>)
                             }
                         </executable>
                     }
@@ -1089,24 +1063,17 @@ package org.clapper.sbtplugins.izpack
                           preselected={yesno(preselected)}>
                         <description>{description}</description>
                         {operatingSystemsToXML}
-                        {
-                            for (dep <- depends)
-                                yield <depends packname={dep.name}/>
-                        }
-                        {for (f <- files) yield f.toXML}
-                        {for (fs <- filesets) yield fs.toXML}
-                        {for (p <- parsables) yield p.toXML}
-                        {for (e <- executables) yield e.toXML}
+                        {depends.map(dep => <depends packname={dep.name}/>)}
+                        {files.map(_.toXML)}
+                        {filesets.map(_.toXML)}
+                        {parsables.map(_.toXML)}
+                        {executables.map(_.toXML)}
                     </pack>
                 }
             }
 
             protected def sectionToXML =
-            {
-                <packs>
-                {for (pack <- individualPacks) yield pack.toXML}
-                </packs>
-            }
+                <packs> {individualPacks.map(_.toXML)} </packs>
         }
     }
 }
