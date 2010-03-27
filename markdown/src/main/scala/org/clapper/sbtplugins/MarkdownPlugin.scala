@@ -42,6 +42,7 @@ import sbt._
 import java.io.File
 
 import scala.io.Source
+import scala.xml._
 
 /**
  * Plugin for SBT (Simple Build Tool) that provides a method that will
@@ -105,7 +106,7 @@ trait MarkdownPlugin extends DefaultProject
      * @param log             logger to use
      */
     def markdown(markdownSource: Path, targetHTML: Path, log: Logger): Unit =
-        markdown(markdownSource, targetHTML, log, None, None)
+        markdown(markdownSource, targetHTML, Nil, log)
 
     /**
      * Run Markdown to convert a source (Markdown) file to HTML. The title
@@ -120,10 +121,44 @@ trait MarkdownPlugin extends DefaultProject
      */
     def markdown(markdownSource: Path, 
                  targetHTML: Path,
-                 log: Logger,
                  css: Option[Path],
-                 externalJS: Option[String]): Unit =
-    {
+                 externalJS: Option[String],
+                 log: Logger): Unit = {
+
+        val cssElem = css match {
+            case Some(path) =>
+                <style type="text/css">
+                  fileLines(path) mkString ""
+                </style>
+            case None =>
+                new Comment("No CSS")
+        }
+
+        val js = externalJS match {
+            case Some(str) =>
+                <script type="text/javascript" src={str}/>
+            case None      =>
+                new Comment("no external Javascript")
+        }
+
+        markdown(markdownSource, targetHTML, List(cssElem, js), log)
+    }
+
+    /**
+     * Run Markdown to convert a source (Markdown) file to HTML. The title
+     * of the result HTML document is taken from the first line of the
+     * Markdown document.
+     *
+     * @param markdownSource  the path to the source file
+     * @param targetHTML      the path to the output file
+     * @param log             logger to use
+     * @param extraHead       A list of HTML nodes to include in the
+     *                        HTML `head` section, or Nil
+     */
+    def markdown(markdownSource: Path,
+                 targetHTML: Path,
+                 extraHead: List[Node],
+                 log: Logger): Unit = {
         // Use Rhino to run the Showdown (Javascript) Markdown converter.
         // MarkdownJ has issues and appears to be unmaintained.
         //
@@ -181,18 +216,6 @@ trait MarkdownPlugin extends DefaultProject
 
             // Prepare the final HTML.
 
-            val cssLines = css match
-            {
-                case Some(path) => fileLines(path) mkString ""
-                case None       => ""
-            }
-
-            val js = externalJS match
-            {
-                case Some(str) => <script type="text/javascript" src={str}/>
-                case None      => <!-- no external JS -->
-            }
-
             // Title is first line.
             val title = markdownSourceLines.head
 
@@ -210,12 +233,9 @@ trait MarkdownPlugin extends DefaultProject
             val html = 
 <html>
 <head>
-<title>{title}</title>
-<style type="text/css">
-{cssLines}
-</style>
-{js}
 <meta http-equiv="content-type" content={contentType}/>
+<title>{title}</title>
+{extraHead}
 </head>
 <body onLoad="createTOC()">
 {body}

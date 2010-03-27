@@ -1,6 +1,8 @@
 Version 0.2.1 (...)
 
-- Changes in IzPack plugin to use `map()` instead of `for/yield`
+* Changes in IzPack plugin to use `map()` instead of `for/yield`
+* Changed Markdown plugin to permit insertion of an arbitrary list of
+  HTML nodes in the generated HTML `head` section.
 
 ----
 
