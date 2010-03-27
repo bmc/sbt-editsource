@@ -4,9 +4,10 @@ SBT Plugins
 Introduction
 ------------
 
-This repository contains various plugins for the [SBT][sbt] build tool. Each
-subdirectory within the repository is its own SBT project. See the `README.md`
-file in subdirectory for details on its plugin.
+This repository contains various plugins for the [SBT][sbt] build tool. The
+top-level directory is a meta-project; each subdirectory within the
+repository is an SBT child project. See the `README.md` file in
+subdirectory for details on its plugin.
 
 [sbt]: http://code.google.com/p/simple-build-tool/
 
@@ -21,10 +22,19 @@ Current plugins included in this repository:
 [izpack]: http://izpack.org/
 [wiki-izpack-page]: http://bmc.github.com/sbt-plugins/izpack.html
 
+Building
+--------
+
+Build the plugins from the top-level directory, using the usual SBT semantics:
+
+    $ sbt update
+    $ sbt compile
+    $ sbt publish-local
+
 License
 -------
 
-This plugin is released under a BSD license, adapted from
+This set of plugins is released under a BSD license, adapted from
 <http://opensource.org/licenses/bsd-license.php>
 
 Copyright &copy; 2010, Brian M. Clapper
