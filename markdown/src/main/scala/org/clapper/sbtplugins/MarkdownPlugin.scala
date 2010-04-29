@@ -123,9 +123,10 @@ trait MarkdownPlugin extends DefaultProject
                  targetHTML: Path,
                  css: Option[Path],
                  externalJS: Option[String],
-                 log: Logger): Unit = {
-
-        val cssElem = css match {
+                 log: Logger): Unit =
+    {
+        val cssElem = css match
+        {
             case Some(path) =>
                 <style type="text/css">
                   fileLines(path) mkString ""
@@ -134,7 +135,8 @@ trait MarkdownPlugin extends DefaultProject
                 new Comment("No CSS")
         }
 
-        val js = externalJS match {
+        val js = externalJS match
+        {
             case Some(str) =>
                 <script type="text/javascript" src={str}/>
             case None      =>
@@ -158,7 +160,8 @@ trait MarkdownPlugin extends DefaultProject
     def markdown(markdownSource: Path,
                  targetHTML: Path,
                  extraHead: List[Node],
-                 log: Logger): Unit = {
+                 log: Logger): Unit =
+    {
         // Use Rhino to run the Showdown (Javascript) Markdown converter.
         // MarkdownJ has issues and appears to be unmaintained.
         //

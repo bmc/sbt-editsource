@@ -82,8 +82,7 @@ trait EditSourcePlugin extends Project
             }
         }
 
-        {for (line <- in.getLines.toList)
-            yield doEdits(line, vars.keys.toList)}.toList
+        in.getLines.map(doEdits(_, vars.keys.toList)).toList
     }
 
     /**
@@ -105,8 +104,7 @@ trait EditSourcePlugin extends Project
         val fOut = new PrintWriter(new FileWriter(out))
         try
         {
-            for (line <- editSourceToList(in, vars))
-                fOut.println(line)
+            editSourceToList(in, vars).foreach(fOut.println(_))
         }
 
         finally
