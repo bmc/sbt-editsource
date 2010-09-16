@@ -16,5 +16,7 @@ markdown/project/build/target/
 markdown/target/
 project/boot/
 project/build/target/
-project/plugins/
+project/plugins/project/
+project/plugins/lib_managed/
+project/plugins/src_managed/
 target/
