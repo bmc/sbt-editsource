@@ -3,5 +3,5 @@
 * Internal changes to the [IzPack plugin][] to use `map()` calls instead of
   `for` and `yield`.
 
-[IzPack plugin]: http://bmc.github.com/sbt-plugins/izpack.html
-[IzPack plugin]: http://bmc.github.com/sbt-plugins/markdown.html
+[IzPack plugin]: http://software.clapper.org/sbt-plugins/izpack.html
+[IzPack plugin]: http://software.clapper.org/sbt-plugins/markdown.html
