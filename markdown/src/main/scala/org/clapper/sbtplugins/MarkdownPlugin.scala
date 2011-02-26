@@ -77,7 +77,12 @@ trait MarkdownPlugin extends DefaultProject
     \* ---------------------------------------------------------------------- */
 
     val rhino = "rhino" % "js" % "1.7R2"
+
+    // Attacklab.net is offline (domain expired). Use personal cached copy.
+/*
     val ShowdownURL = "http://attacklab.net/showdown/showdown-v0.9.zip"
+*/
+    val ShowdownURL = "http://cloud.github.com/downloads/bmc/sbt-plugins/showdown-0.9.zip"
     val ShowdownLocal = MarkdownLibDir / "showdown.js"
 
     /* ---------------------------------------------------------------------- *\
