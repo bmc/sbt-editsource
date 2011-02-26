@@ -19,7 +19,7 @@ Markdown into HTML. For details on the approach, see my
 
 Please see the [Markdown Plugin web site][] for detailed usage instructions.
 
-[Markdown Plugin web site]: http://bmc.github.com/sbt-plugins/markdown.html
+[Markdown Plugin web site]: http://software.clapper.org/sbt-plugins/markdown.html
 
 ## License
 

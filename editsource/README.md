@@ -18,7 +18,7 @@ found in the map is silently ignored.
 
 Please see the [EditSource Plugin web site][] for detailed usage instructions.
 
-[EditSource Plugin web site]: http://bmc.github.com/sbt-plugins/editsource.html
+[EditSource Plugin web site]: http://software.clapper.org/sbt-plugins/editsource.html
 
 ## License
 

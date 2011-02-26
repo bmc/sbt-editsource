@@ -20,7 +20,7 @@ Current plugins included in this repository:
 * Markdown: Run Markdown on a source file, producing an HTML document.
 
 [izpack]: http://izpack.org/
-[wiki-izpack-page]: http://bmc.github.com/sbt-plugins/izpack.html
+[wiki-izpack-page]: http://software.clapper.org/sbt-plugins/izpack.html
 
 Building
 --------

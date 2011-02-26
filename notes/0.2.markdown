@@ -3,4 +3,4 @@
 * Web pages now exist for each plugin, including a comprehensive one
   for the IzPack plugin.
 
-[IzPack plugin]: http://bmc.github.com/sbt-plugins/izpack.html
+[IzPack plugin]: http://software.clapper.org/sbt-plugins/izpack.html

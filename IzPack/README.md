@@ -41,7 +41,7 @@ Then, within the `izpack` project directory, publish it locally:
 
 Please see the [IzPack Plugin web site][] for detailed usage instructions.
 
-[IzPack Plugin web site]: http://bmc.github.com/sbt-plugins/izpack.html
+[IzPack Plugin web site]: http://software.clapper.org/sbt-plugins/izpack.html
 
 ## License
 
