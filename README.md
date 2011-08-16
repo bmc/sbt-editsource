@@ -1,40 +1,28 @@
-SBT Plugins
-===========
+Edit Source SBT Plugin
+======================
 
-Introduction
-------------
+## Introduction
 
-This repository contains various plugins for the [SBT][sbt] build tool. The
-top-level directory is a meta-project; each subdirectory within the
-repository is an SBT child project. See the `README.md` file in
-subdirectory for details on its plugin.
+This project contains an "edit source" plugin for the [SBT][] build tool.
+This plugin provides a method that offers a similar substitution facility
+to the one available with an [Ant] `filterset`. That is, it edits a source
+(a file, a string--anything that can be wrapped in a Scala `Source`
+object), substituting variable references. Variable references look like
+_@var@_. A map supplies values for the variables. Any variable that isn't
+found in the map is silently ignored.
 
-[sbt]: http://code.google.com/p/simple-build-tool/
+[SBT]: http://code.google.com/p/simple-build-tool/
+[Ant]: http://ant.apache.org/
 
-Current plugins included in this repository:
+## Using the Plugin
 
-* EditSource: Edit a source (file or string), applying substitutions.
-* IzPack: Run the [IzPack][izpack] installer generator within SBT. Additional
-  detailed information on this plugin is available on the plugin's
-  [web page][izpack-plugin-page].
-* Markdown: Run Markdown on a source file, producing an HTML document.
+Please see the [EditSource Plugin web site][] for detailed usage instructions.
 
-[izpack]: http://izpack.org/
-[wiki-izpack-page]: http://software.clapper.org/sbt-plugins/izpack.html
+[EditSource Plugin web site]: http://software.clapper.org/sbt-plugins/editsource.html
 
-Building
---------
+## License
 
-Build the plugins from the top-level directory, using the usual SBT semantics:
-
-    $ sbt update
-    $ sbt compile
-    $ sbt publish-local
-
-License
--------
-
-This set of plugins is released under a BSD license, adapted from
+This plugin is released under a BSD license, adapted from
 <http://opensource.org/licenses/bsd-license.php>
 
 Copyright &copy; 2010, Brian M. Clapper
@@ -67,8 +55,7 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Copyrights
-----------
+## Copyrights
 
 These plugins are copyright &copy; 2010 Brian M. Clapper.
 

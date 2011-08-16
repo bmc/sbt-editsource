@@ -1,6 +1,0 @@
-* The [IzPack plugin][] now provides support for configuring the installer
-  directly within SBT, using Scala, rather than XML.
-* Web pages now exist for each plugin, including a comprehensive one
-  for the IzPack plugin.
-
-[IzPack plugin]: http://software.clapper.org/sbt-plugins/izpack.html

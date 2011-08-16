@@ -1,7 +1,0 @@
-* Changed [Markdown plugin][] to permit insertion of an arbitrary list of
-  HTML nodes in the generated HTML `head` section.
-* Internal changes to the [IzPack plugin][] to use `map()` calls instead of
-  `for` and `yield`.
-
-[IzPack plugin]: http://software.clapper.org/sbt-plugins/izpack.html
-[IzPack plugin]: http://software.clapper.org/sbt-plugins/markdown.html

@@ -1,3 +1,0 @@
-* Now uses [Posterous-SBT][] SBT plugin.
-
-[Posterous-SBT]: http://github.com/n8han/posterous-sbt

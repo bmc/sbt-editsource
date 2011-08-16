@@ -1,3 +1,0 @@
-* The Markdown plugin still uses the Showdown Javascript Markdown parser,
-  but the host domain (`attacklab.net`) is offline. Switched to use a
-  copy cached in the `sbt-plugins` GitHub downloads area.
