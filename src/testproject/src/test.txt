@@ -1,2 +1,3 @@
 Test file
 ${foo}
+Simple Build Tool

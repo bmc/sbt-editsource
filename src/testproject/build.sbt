@@ -19,4 +19,9 @@ variables in EditSource <+= organization {org => ("organization", org)}
 
 variables in EditSource += ("foo", "bar")
 
-substitutions in EditSource := Seq(("""\b[Tt]est\b""".r, "TEST", SubAll))
+logLevel := Level.Debug
+
+substitutions in EditSource := Seq(
+    sub("""\b(?i)test\b""".r, "TEST", SubAll),
+    sub("""\b(?i)simple build tool\b""".r, "Scalable Build Tool")
+)
