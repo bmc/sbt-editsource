@@ -4,28 +4,23 @@ Edit Source SBT Plugin
 ## Introduction
 
 This project contains an "edit source" plugin for the [SBT][] build tool.
-This plugin provides a method that offers a similar substitution facility
-to the one available with an [Ant] `filterset`. That is, it edits a source
-(a file, a string--anything that can be wrapped in a Scala `Source`
-object), substituting variable references. Variable references look like
-_@var@_. A map supplies values for the variables. Any variable that isn't
-found in the map is silently ignored.
+
+**STILL UNDERWAY. NOTHING TO SEE HERE YET. MOVE ALONG.**
 
 [SBT]: http://code.google.com/p/simple-build-tool/
-[Ant]: http://ant.apache.org/
 
 ## Using the Plugin
 
 Please see the [EditSource Plugin web site][] for detailed usage instructions.
 
-[EditSource Plugin web site]: http://software.clapper.org/sbt-plugins/editsource.html
+[EditSource Plugin web site]: http://software.clapper.org/sbt-editsource.html
 
 ## License
 
 This plugin is released under a BSD license, adapted from
 <http://opensource.org/licenses/bsd-license.php>
 
-Copyright &copy; 2010, Brian M. Clapper
+Copyright &copy; 2011, Brian M. Clapper
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
