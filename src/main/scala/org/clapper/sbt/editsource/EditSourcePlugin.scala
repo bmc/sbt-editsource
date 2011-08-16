@@ -35,19 +35,24 @@
   ---------------------------------------------------------------------------
 */
 
-package org.clapper.sbt
+package org.clapper.sbt.editsource
 
 import sbt._
 import Keys._
 import Defaults._
 import Project.Initialize
 
-import java.io.File
+import java.io.{File, FileWriter, PrintWriter}
 import java.text.SimpleDateFormat
 import java.util.Date
 
 import scala.io.Source
 import scala.util.matching.Regex
+import scala.Enumeration
+import scala.annotation.tailrec
+
+import grizzled.file.{util => FileUtil}
+import grizzled.string.template.UnixShellStringTemplate
 
 /**
  * Plugin for SBT (Simple Build Tool) that provides a task to edit a source
@@ -55,13 +60,23 @@ import scala.util.matching.Regex
  *
  * To use this plugin, mix it into your SBT project.
  */
-object EditSourcePlugin extends Plugin
+object EditSource extends Plugin
 {
     // -----------------------------------------------------------------
     // Plugin Settings and Tasks
     // -----------------------------------------------------------------
 
+    sealed trait SubOpt {val code: Int}
+    case object SubOnce extends SubOpt { val code = 1 }
+    case object SubAll extends SubOpt { val code = 2 }
+
+    private case class SubMapValue(replacement: String, code: SubOpt)
+
+    type SubstitutionValue = Tuple3[Regex, String, SubOpt]
+
     val EditSource = config("editsource")
+
+    // FIXME: Need to hook into clean.
 
     // Update with:
     //
@@ -73,11 +88,12 @@ object EditSourcePlugin extends Plugin
     // e.g., replace all instances of "foo" (caseblind) with "bar", but
     // only if "foo" appears by itself.
     // substitutions in EditSource += ("""(?i)\bfoo\b""".r, "bar")
-    val substitutions = SettingKey[Seq[Tuple2[Regex, String]]](
+    val substitutions = SettingKey[Seq[SubstitutionValue]](
         "substitutions", "regex -> replacement strings")
 
     // sources is a list of source files to edit.
-    val sources = TaskKey[Seq[File]]("sources", "List of sources to edit")
+    val sourceFiles = SettingKey[Seq[File]]("source-files",
+                                            "List of sources to edit")
 
     // targetDirectory is the directory where edited files are to be
     // written. Directory structure is NOT preserved.
@@ -95,6 +111,12 @@ object EditSourcePlugin extends Plugin
         variables <+= scalaVersion (sv => ("scalaVersion", sv)),
         variables <+= baseDirectory (bd => ("baseDirectory", bd.absolutePath)),
 
+        substitutions := Seq.empty[Tuple3[Regex, String, SubOpt]],
+
+        sourceFiles := Seq.empty[File],
+
+        targetDirectory <<= baseDirectory(_ / "target"),
+
         edit <<= editTask
     ))
 
@@ -104,23 +126,88 @@ object EditSourcePlugin extends Plugin
 
     private def editTask: Initialize[Task[Unit]] =
     {
-        (sources, variables, substitutions, targetDirectory) map
+        (sourceFiles, variables, substitutions, targetDirectory, streams) map
         {
-            (sources, variables, substitutions, targetDirectory) =>
+            (sources, variables, substitutions, targetDirectory, streams) =>
 
             val varMap = variables.toMap
             for (source <- sources)
                 editSource(source,
                            variables.toMap, 
-                           substitutions.toMap,
-                           targetDirectory)
+                           substitutions,
+                           targetDirectory,
+                           streams.log)
         }
     }
 
-    private def editSource(source: File,
+    private def editSource(sourceFile: File,
                            variables: Map[String, String],
-                           substitutions: Map[Regex, String],
-                           targetDirectory: File): Unit =
+                           substitutions: Seq[SubstitutionValue],
+                           targetDirectory: File,
+                           log: Logger): Unit =
     {
+        val subMap = Map(
+            substitutions map {t => t._1 -> SubMapValue(t._2, t._3)}: _*
+        )
+
+        val targetFile = Path(targetDirectory) / Path(sourceFile).name
+
+        if (targetFile.exists &&
+            (sourceFile.lastModified <= targetFile.lastModified))
+        {
+            log.debug("\"%s\" is up-to-date." format targetFile.toString)
+        }
+
+        else
+        {
+            log.info("Editing \"%s\" to \"%s\"" format (sourceFile.toString,
+                                                        targetFile.toString))
+            val out = new PrintWriter(new FileWriter(targetFile))
+            val in = Source.fromFile(sourceFile)
+            val varMap = variables.toMap
+            val varSub = new UnixShellStringTemplate(v => varMap.get(v), false)
+
+            for (line <- in.getLines())
+            {
+                // Apply all variables, then the regexs.
+
+                out.println(applyRegexs(varSub.substitute(line),
+                                        substitutions.toList))
+            }
+
+            out.close()
+        }
+    }
+
+    private def applyRegexs(line: String,
+                            substitutions: List[SubstitutionValue]): String =
+    {
+        def doSub(s: String, sub: SubstitutionValue): String =
+        {
+            val (re, replacement, opt) = sub
+
+            val s2 = opt match
+            {
+                case SubOnce => re.replaceFirstIn(s, replacement)
+                case SubAll  => re.replaceAllIn(s, replacement)
+            }
+            println(s + " -> " + s2)
+            s2
+        }
+
+        @tailrec 
+        def doSubs(s: String, subsLeft: List[SubstitutionValue]): String =
+        {
+            subsLeft match
+            {
+                case Nil =>
+                    s
+
+                case sub :: rest =>
+                    doSubs(doSub(line, sub), rest)
+            }
+        }
+
+        doSubs(line, substitutions)
     }
 }
