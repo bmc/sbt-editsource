@@ -1,5 +1,5 @@
 ---
-title: "sbt-editsource" An SBT plugin for editing files"
+title: "sbt-editsource: An SBT plugin for editing files"
 layout: withTOC
 ---
 
