@@ -127,8 +127,10 @@ you'll end up with the following edited versions:
 ---
 
 `variables` is a sequence of `(variableName, value)` pairs. For instance,
-the following two lines define (a) a `${projectName}` variable that
-substitutes the name of the project, and (b) `${author}` variable:
+the following two lines define:
+
+* a `${projectName}` variable that substitutes the name of the project, and
+* a `${author}` variable
 
     name := "my-project"
 
