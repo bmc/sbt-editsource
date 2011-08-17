@@ -22,6 +22,6 @@ variables in EditSource += ("foo", "bar")
 logLevel := Level.Debug
 
 substitutions in EditSource := Seq(
-    sub("""\b(?i)test\b""".r, "TEST", SubAll),
+    sub("""(?i)\btest\b""".r, "TEST", SubAll),
     sub("""\b(?i)simple build tool\b""".r, "Scalable Build Tool")
 )

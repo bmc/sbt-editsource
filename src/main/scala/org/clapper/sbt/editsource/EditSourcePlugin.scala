@@ -51,7 +51,6 @@ import scala.Enumeration
 import scala.annotation.tailrec
 
 import grizzled.file.{util => FileUtil}
-import grizzled.string.template.UnixShellStringTemplate
 
 /**
  * Plugin for SBT (Simple Build Tool) that provides a task to edit a source
@@ -262,8 +261,7 @@ object EditSource extends Plugin
                                                         targetFile.toString))
             val out = new PrintWriter(new FileWriter(targetFile))
             val in = Source.fromFile(sourceFile)
-            val varMap = variables.toMap
-            val varSub = new UnixShellStringTemplate(v => varMap.get(v), false)
+            val varSub = new EditSourceStringTemplate(variables)
 
             for (line <- in.getLines())
             {
@@ -297,7 +295,7 @@ object EditSource extends Plugin
                     s
 
                 case sub :: rest =>
-                    doSubs(doSub(line, sub), rest)
+                    doSubs(doSub(s, sub), rest)
             }
         }
 
