@@ -21,6 +21,8 @@ variables in EditSource += ("foo", "bar")
 
 logLevel := Level.Debug
 
+flatten in EditSource := false
+
 substitutions in EditSource := Seq(
     sub("""(?i)\btest\b""".r, "TEST", SubAll),
     sub("""\b(?i)simple build tool\b""".r, "Scalable Build Tool")

@@ -115,7 +115,7 @@ object EditSource extends Plugin
                             val options:      SubOpts)
 
     // -----------------------------------------------------------------
-    // Plugin Settings and Tasks
+    // Plugin Settings and Task Declarations
     // -----------------------------------------------------------------
 
     val EditSource = config("editsource") extend(Runtime)
@@ -144,6 +144,7 @@ object EditSource extends Plugin
     val targetDirectory = SettingKey[File]("target-directory",
                                            "Where to copy edited files")
 
+    // Whether or not to flatten the directory structure.
     val flatten = SettingKey[Boolean]("flatten",
                                       "Don't preserve source directory " +
                                       "structure.")
@@ -177,7 +178,7 @@ object EditSource extends Plugin
     ))
 
     // -----------------------------------------------------------------
-    // Methods
+    // Public Methods
     // -----------------------------------------------------------------
 
     /**
@@ -199,7 +200,7 @@ object EditSource extends Plugin
         Substitution(regex, substitution, opts)
 
     // -----------------------------------------------------------------
-    // Private
+    // Task Implementations
     // -----------------------------------------------------------------
 
     private def cleanTask: Initialize[Task[Unit]] =
@@ -236,6 +237,10 @@ object EditSource extends Plugin
         }
     }
 
+    // -----------------------------------------------------------------
+    // Private Utility Methods
+    // -----------------------------------------------------------------
+
     private def editSource(variables: Map[String, String],
                            substitutions: Seq[Substitution],
                            targetDirectory: File,
@@ -249,16 +254,23 @@ object EditSource extends Plugin
                                    baseDirectory,
                                    flatten)
 
-        if (targetFile.exists &&
-            (sourceFile.lastModified <= targetFile.lastModified))
+        if (targetFile.exists && (! (sourceFile newerThan targetFile)))
         {
             log.debug("\"%s\" is up-to-date." format targetFile.toString)
         }
 
         else
         {
+            val targetPath = targetFile.toString
             log.info("Editing \"%s\" to \"%s\"" format (sourceFile.toString,
-                                                        targetFile.toString))
+                                                        targetPath))
+
+            val parentDir = new File(FileUtil.dirname(targetPath))
+            log.debug("Ensuring that \"%s\" exists." format parentDir)
+
+            if (! parentDir.mkdirs)
+                throw new Exception("Can't create \"%s\"" format parentDir)
+
             val out = new PrintWriter(new FileWriter(targetFile))
             val in = Source.fromFile(sourceFile)
             val varSub = new EditSourceStringTemplate(variables)
