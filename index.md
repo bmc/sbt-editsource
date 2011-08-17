@@ -1,5 +1,5 @@
 ---
-title: The SBT IzPack Plugin
+title: "sbt-editsource" An SBT plugin for editing files"
 layout: withTOC
 ---
 
