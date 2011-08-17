@@ -268,8 +268,14 @@ object EditSource extends Plugin
             val parentDir = new File(FileUtil.dirname(targetPath))
             log.debug("Ensuring that \"%s\" exists." format parentDir)
 
-            if (! parentDir.mkdirs)
-                throw new Exception("Can't create \"%s\"" format parentDir)
+            if (parentDir.exists)
+                log.debug("\"%s\" already exists." format parentDir)
+            else
+            {
+                log.debug("Creating \"%s\"." format parentDir)
+                if (! parentDir.mkdirs())
+                    throw new Exception("Can't create \"%s\"" format parentDir)
+            }
 
             val out = new PrintWriter(new FileWriter(targetFile))
             val in = Source.fromFile(sourceFile)

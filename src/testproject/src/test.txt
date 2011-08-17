@@ -1,5 +1,6 @@
 Test file test
 ${foo}
+${yadda?yadda-default}
 Simple Build Tool ..... Simple build Tool
 Today: ${sys.today}
 Now: ${sys.now}

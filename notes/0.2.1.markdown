@@ -4,4 +4,4 @@
   `for` and `yield`.
 
 [IzPack plugin]: http://software.clapper.org/sbt-plugins/izpack.html
-[IzPack plugin]: http://software.clapper.org/sbt-plugins/markdown.html
+[Markdown plugin]: http://software.clapper.org/sbt-plugins/markdown.html

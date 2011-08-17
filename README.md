@@ -1,26 +1,31 @@
 Edit Source SBT Plugin
 ======================
 
-## Introduction
+# Introduction
 
-This project contains an "edit source" plugin for the [SBT][] build tool.
+[sbt-editsource][] is a text substitution plugin for [SBT][] 0.10.x. In a
+way, it's a poor man's [*sed*][](1), for SBT. It provides the ability to
+apply line-by-line substitutions to a source text file, producing an edited
+output file. It supports two kinds of edits:
 
-**STILL UNDERWAY. NOTHING TO SEE HERE YET. MOVE ALONG.**
+* Variable substitution, where `${var}` is replaced by a value.
+* *sed*-like [regular expression][] substitution.
 
+[sed]: http://en.wikipedia.org/wiki/Sed
 [SBT]: http://code.google.com/p/simple-build-tool/
 
-## Using the Plugin
+# Using the Plugin
 
-Please see the [EditSource Plugin web site][] for detailed usage instructions.
+Please see the [web site][] for detailed usage instructions.
 
-[EditSource Plugin web site]: http://software.clapper.org/sbt-editsource.html
+[web site]: http://software.clapper.org/sbt-editsource.html
 
 ## License
 
 This plugin is released under a BSD license, adapted from
 <http://opensource.org/licenses/bsd-license.php>
 
-Copyright &copy; 2011, Brian M. Clapper
+Copyright &copy; 2010-2011, Brian M. Clapper
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -34,9 +39,9 @@ met:
   notice, this list of conditions and the following disclaimer in the
   documentation and/or other materials provided with the distribution.
 
-* Neither the names "clapper.org" nor the names of its contributors may be
-  used to endorse or promote products derived from this software without
-  specific prior written permission.
+* Neither the names "clapper.org", "sbt-editsource" nor the names of any
+  contributor may be used to endorse or promote products derived from this
+  software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
