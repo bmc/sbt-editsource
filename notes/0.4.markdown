@@ -1,0 +1,12 @@
+* Pulled the EditSource plugin into its own project and GitHub repo.
+* Refactored and reimplemented as an [SBT][] 0.10.x plugin.
+* Changed syntax of variable references from `@varname@` to `${varname}`.
+* Variable substitution now supports special `env` and `sys` prefixes.
+  `${env.VAR}` substitutes `VAR` from the environment. (e.g., `${env.HOME}`)
+  `${sys.now}` substitutes the current date and time in "yyyy/mm/dd HH:MM:SS"
+  format. `${sys.today}` substitutes the current date in "yyyy/mm/dd" format.
+  `${sys.anything_else}` attempts to resolve the variable from the JVM's
+  `System.properties` list (e.g., `${sys.user.name}`, `${sys.java.io.tmpdir}`)
+* Plugin now supports regular expression substitution.
+
+[SBT]: http://code.google.com/p/simple-build-tool/
