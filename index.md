@@ -208,10 +208,15 @@ You can specify multiple substitutions, of course:
         sub("""\b(?i)simple build tool\b""".r, "Scalable Build Tool", SubAll)
     )
 
-Caveats:
+Also, regular expression [capturing groups][] are supported, so you can use
+more complex regular expression substitutions like this:
 
-* Regular expression substitutions are run *after* variable substitutions.
-* Regular expression groups are not yet supported. 
+    // Remove everything up to, but not including the word "foo", but save
+    // the "foo" and everything after.
+
+    sub("""^.*(foo.*)$""".r, "$1")
+
+*NOTE*: Regular expression substitutions are run *after* variable substitutions.
 
 # Tasks
 
@@ -227,7 +232,6 @@ The plugin provides two new SBT tasks.
 
 # Restrictions
 
-* Regular expression groups are not yet supported. (They will be, though.)
 * Currently, *sbt-editsource* only supports one set of edits, applied to
   *all* specified files. That is, you cannot specify one set of edits for
   one group of files and a second set of edits for a different group of
@@ -269,3 +273,4 @@ request. Along with any patch you send:
 [sed]: http://en.wikipedia.org/wiki/Sed
 [regular expression]: http://download.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html
 [java.util.regex.Pattern]: http://download.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html
+[capturing groups]: http://download.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html#cg
