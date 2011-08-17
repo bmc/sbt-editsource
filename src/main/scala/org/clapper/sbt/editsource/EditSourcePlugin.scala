@@ -120,8 +120,6 @@ object EditSource extends Plugin
 
     val EditSource = config("editsource") extend(Runtime)
 
-    // FIXME: Need to hook into clean.
-
     // Update with:
     //
     // variables in EditSource <+= organization {org => ("organization", org)}
@@ -139,8 +137,7 @@ object EditSource extends Plugin
     val sourceFiles = SettingKey[Seq[File]]("source-files",
                                             "List of sources to edit")
 
-    // targetDirectory is the directory where edited files are to be
-    // written. Directory structure is NOT preserved.
+    // targetDirectory is the directory where edited files are to be written.
     val targetDirectory = SettingKey[File]("target-directory",
                                            "Where to copy edited files")
 
