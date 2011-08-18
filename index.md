@@ -58,7 +58,7 @@ If you also want to apply the edits to all files ending in ".md", use either:
 
     sourceFiles in EditSource <++= baseDirectory(d => (d / "src" ** "*.txt").get)
 
-    sourceFiles in EditSource <++= baseDirectory(d => (d / "src" ** "*.md).get)
+    sourceFiles in EditSource <++= baseDirectory(d => (d / "src" ** "*.md").get)
     
 or, more succinctly:
 
