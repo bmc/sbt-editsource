@@ -4,4 +4,4 @@ line-oriented editing of source files. In a sense, it's a poor man's
 and variable substitution.
 
 [sbt-editsource]: http://software.clapper.org/sbt-editsource/
-[SBT]: http://code.google.com/p/simple-build-tool/
+[SBT]: https://github.com/harrah/xsbt
