@@ -1,5 +1,5 @@
 ---
-title: License for the SBT IzPack Plugin
+title: License for sbt-editsource
 layout: default
 ---
 
