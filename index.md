@@ -99,7 +99,7 @@ An example will help clarify. Consider the following file tree:
 Let's assume you're editing all the files ending in ".md", into the *target*
 directory.
 
-    sourceFiles in EditSource <++= baseDirectory(d => (d / "src" ** "*.md).get)
+    sourceFiles in EditSource <++= baseDirectory(d => (d / "src" ** "*.md").get)
 
     targetDirectory in EditSource <<= baseDirectory(_ / "target")
     
