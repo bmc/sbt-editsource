@@ -27,7 +27,7 @@ doesn't already exist) and add the following:
     // The plugin is only published for 2.8.1
     libraryDependencies <<= (scalaVersion, libraryDependencies) { (scv, deps) =>
         if (scv == "2.8.1")
-            deps :+ "org.clapper" %% "sbt-editsource" % "0.4"
+            deps :+ "org.clapper" %% "sbt-editsource" % "0.4.1"
         else
             deps
     }
