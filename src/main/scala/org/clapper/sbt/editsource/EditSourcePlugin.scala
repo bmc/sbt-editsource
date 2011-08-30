@@ -115,58 +115,61 @@ object EditSource extends Plugin {
   // Plugin Settings and Task Declarations
   // -----------------------------------------------------------------
 
-  val EditSource = config("editsource") extend(Runtime)
+  object EditSource {
 
-  // Update with:
-  //
-  // variables in EditSource <+= organization {org => ("organization", org)}
-  // variables in EditSource += ("foo", "bar")
-  val editVariables = SettingKey[Seq[Tuple2[String, String]]](
-    "variables", "variable -> value mappings")
+    val Config = config("editsource") extend(Runtime)
 
-  // e.g., replace all instances of "foo" (caseblind) with "bar", but
-  // only if "foo" appears by itself.
-  // substitutions in EditSource += ("""(?i)\bfoo\b""".r, "bar")
-  val editSubstitutions = SettingKey[Seq[Substitution]](
-    "substitutions", "regex -> replacement strings")
+    // Update with:
+    //
+    // variables in EditSource <+= organization {org => ("organization", org)}
+    // variables in EditSource += ("foo", "bar")
+    val variables = SettingKey[Seq[Tuple2[String, String]]](
+      "variables", "variable -> value mappings")
 
-  // sources is a list of source files to edit.
-  val editSourceFiles = SettingKey[Seq[File]]("source-files",
-                                              "List of sources to edit")
+    // e.g., replace all instances of "foo" (caseblind) with "bar", but
+    // only if "foo" appears by itself.
+    // substitutions in EditSource += ("""(?i)\bfoo\b""".r, "bar")
+    val substitutions = SettingKey[Seq[Substitution]](
+      "substitutions", "regex -> replacement strings")
 
-  // targetDirectory is the directory where edited files are to be written.
-  val editTargetDirectory = SettingKey[File]("target-directory",
-                                             "Where to copy edited files")
+    // sources is a list of source files to edit.
+    val sourceFiles = SettingKey[Seq[File]]("source-files",
+                                            "List of sources to edit")
 
-  // Whether or not to flatten the directory structure.
-  val editFlatten = SettingKey[Boolean]("flatten",
-                                        "Don't preserve source directory " +
-                                        "structure.")
+    // targetDirectory is the directory where edited files are to be written.
+    val targetDirectory = SettingKey[File]("target-directory",
+                                           "Where to copy edited files")
 
-  val edit = TaskKey[Unit]("edit", "Fire up the editin' engine.")
-  val clean = TaskKey[Unit]("clean", "Remove target files.")
+    // Whether or not to flatten the directory structure.
+    val flatten = SettingKey[Boolean]("flatten",
+                                          "Don't preserve source directory " +
+                                          "structure.")
+
+    val edit = TaskKey[Unit]("edit", "Fire up the editin' engine.")
+    val clean = TaskKey[Unit]("clean", "Remove target files.")
+  }
 
   private val DateFormat = new SimpleDateFormat("yyyyy/mm/dd")
 
   val editSourceSettings: Seq[sbt.Project.Setting[_]] =
-    inConfig(EditSource)(Seq(
+    inConfig(EditSource.Config)(Seq(
 
-      editVariables := Seq(("today", DateFormat.format(new Date))),
-      editVariables <+= scalaVersion(sv => ("scalaVersion", sv)),
-      editVariables <+= baseDirectory(bd => ("baseDirectory",
-                                             bd.absolutePath)),
+      EditSource.variables := Seq(("today", DateFormat.format(new Date))),
+      EditSource.variables <+= scalaVersion(sv => ("scalaVersion", sv)),
+      EditSource.variables <+= baseDirectory(bd => ("baseDirectory",
+                                                    bd.absolutePath)),
 
-      editFlatten := true,
-      editSubstitutions := Seq.empty[Substitution],
-      editSourceFiles := Seq.empty[File],
-      editTargetDirectory <<= baseDirectory(_ / "target"),
+      EditSource.flatten := true,
+      EditSource.substitutions := Seq.empty[Substitution],
+      EditSource.sourceFiles := Seq.empty[File],
+      EditSource.targetDirectory <<= baseDirectory(_ / "target"),
 
-      edit <<= editTask,
-      clean <<= cleanTask
+      EditSource.edit <<= editTask,
+      EditSource.clean <<= cleanTask
     )) ++
   inConfig(Compile)(Seq(
     // Hook our clean into the global one.
-    clean in Global <<= (clean in EditSource).identity
+    clean in Global <<= (EditSource.clean in EditSource.Config).identity
   ))
 
   // -----------------------------------------------------------------
@@ -180,14 +183,14 @@ object EditSource extends Plugin {
    * {{{
    * substitutions in EditSource := Seq(
    *     sub("""\b(?i)test\b""".r, "TEST", SubAll),
-   *     sub("""\b(?i)simple build tool\b""".r, "Scalable Build Tool")
-   * )
-   * }}}
-   *
-   * @param regex        The regular expression to find
-   * @param substitution The string to substitute
-   * @param opts         Any additional options
-   */
+  *     sub("""\b(?i)simple build tool\b""".r, "Scalable Build Tool")
+  * )
+  * }}}
+  *
+  * @param regex        The regular expression to find
+  * @param substitution The string to substitute
+  * @param opts         Any additional options
+  */
   def sub(regex: Regex, substitution: String, opts: SubOpts = NoSubOpts) =
     Substitution(regex, substitution, opts)
 
@@ -196,26 +199,29 @@ object EditSource extends Plugin {
   // -----------------------------------------------------------------
 
   private def cleanTask: Initialize[Task[Unit]] = {
-    (editSourceFiles, editTargetDirectory, baseDirectory, editFlatten,
-     streams) map {
+    (EditSource.sourceFiles, EditSource.targetDirectory, baseDirectory,
+     EditSource.flatten, streams) map {
+
       (sourceFiles, targetDirectory, baseDirectory, flatten, streams) =>
 
-      for (sourceFile <- sourceFiles) {
-        val targetFile = targetFor(sourceFile,
-                                   targetDirectory,
-                                   baseDirectory,
-                                   flatten)
-        if (targetFile.exists) {
-          streams.log.debug("Deleting \"%s\"" format targetFile)
-          targetFile.delete
+        for (sourceFile <- sourceFiles) {
+          val targetFile = targetFor(sourceFile,
+                                     targetDirectory,
+                                     baseDirectory,
+                                     flatten)
+          if (targetFile.exists) {
+            streams.log.debug("Deleting \"%s\"" format targetFile)
+            targetFile.delete
+          }
         }
-      }
     }
   }
 
   private def editTask: Initialize[Task[Unit]] = {
-    (editSourceFiles, editVariables, editSubstitutions,
-     editTargetDirectory, baseDirectory, editFlatten, streams) map {
+    (EditSource.sourceFiles, EditSource.variables, EditSource.substitutions,
+     EditSource.targetDirectory, baseDirectory, EditSource.flatten,
+     streams) map {
+
       (sources, variables, subs, target, base, flatten, streams) =>
 
       val varMap = variables.toMap
@@ -234,7 +240,7 @@ object EditSource extends Plugin {
                          baseDirectory: File,
                          flatten: Boolean,
                          log: Logger)
-  (sourceFile: File): Unit = {
+                        (sourceFile: File): Unit = {
     val targetFile = targetFor(sourceFile,
                                targetDirectory,
                                baseDirectory,
