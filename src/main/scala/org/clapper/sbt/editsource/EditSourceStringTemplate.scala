@@ -46,47 +46,38 @@ import java.util.Date
 
 import grizzled.string.template.UnixShellStringTemplate
 
-private[editsource] class EditSourceStringTemplate(vars: Map[String, String])
-{
-    private val delegate = new UnixShellStringTemplate(dereference _,
-                                                       """[a-zA-Z0-0_.]+""",
-                                                       true)
-    private val TimeFormat = new SimpleDateFormat("yyyy/mm/dd HH:MM:ss")
-    private val DateFormat = new SimpleDateFormat("yyyy/mm/dd")
+private[editsource] class EditSourceStringTemplate(vars: Map[String, String]) {
+  private val delegate = new UnixShellStringTemplate(dereference _,
+                                                     """[a-zA-Z0-0_.]+""",
+                                                     true)
+  private val TimeFormat = new SimpleDateFormat("yyyy/mm/dd HH:MM:ss")
+  private val DateFormat = new SimpleDateFormat("yyyy/mm/dd")
 
-    @inline final def substitute(line: String) = delegate.substitute(line)
+  @inline final def substitute(line: String) = delegate.substitute(line)
 
-    def dereference(varName: String): Option[String] =
-    {
-        if (varName.trim == "")
-            None
+  def dereference(varName: String): Option[String] = {
+    if (varName.trim == "")
+      None
+    else if (varName.startsWith("env."))
+      env(varName.drop(4))
+    else if (varName.startsWith("sys."))
+      sys(varName.drop(4))
+    else
+      vars.get(varName)
+  }
 
-        else if (varName.startsWith("env."))
-            env(varName.drop(4))
+  private def env(s: String): Option[String] = {
+    val result = System.getenv(s)
+    if (result == null) None else Some(result)
+  }
 
-        else if (varName.startsWith("sys."))
-            sys(varName.drop(4))
-
-        else
-            vars.get(varName)
+  private def sys(s: String): Option[String] = {
+    val result = s match {
+      case "now"   => TimeFormat.format(new Date)
+      case "today" => DateFormat.format(new Date)
+      case _       => System.getProperty(s)
     }
 
-    private def env(s: String): Option[String] =
-    {
-        val result = System.getenv(s)
-
-        if (result == null) None else Some(result)
-    }
-
-    private def sys(s: String): Option[String] =
-    {
-        val result = s match
-        {
-            case "now"   => TimeFormat.format(new Date)
-            case "today" => DateFormat.format(new Date)
-            case _       => System.getProperty(s)
-        }
-
-        if (result == null) None else Some(result)
-    }
+    if (result == null) None else Some(result)
+  }
 }
