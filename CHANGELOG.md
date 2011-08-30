@@ -3,6 +3,11 @@ title: "Change Log: sbt-editsource"
 layout: default
 ---
 
+Version 0.4.1:
+
+* Renamed various plugin settings and variables, so their names wouldn't
+  clash, on import, with other plugins.
+
 Version 0.4:
 
 * Pulled the EditSource plugin into its own project and GitHub repo.

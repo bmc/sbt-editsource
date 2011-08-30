@@ -45,51 +45,51 @@ The plugin provides the following new settings.
 
 ---
 
-**`sourceFiles`**
+**`editSourceFiles`**
 
 ---
 
 The source files to be edited. For instance, suppose you want to edit all
 files under "src" ending in ".txt". To do so, use:
 
-    sourceFiles in EditSource <++= baseDirectory(d => (d / "src" ** "*.txt").get)
+    editSourceFiles in EditSource <++= baseDirectory(d => (d / "src" ** "*.txt").get)
 
 If you also want to apply the edits to all files ending in ".md", use either:
 
-    sourceFiles in EditSource <++= baseDirectory(d => (d / "src" ** "*.txt").get)
+    editSourceFiles in EditSource <++= baseDirectory(d => (d / "src" ** "*.txt").get)
 
-    sourceFiles in EditSource <++= baseDirectory(d => (d / "src" ** "*.md").get)
+    editSourceFiles in EditSource <++= baseDirectory(d => (d / "src" ** "*.md").get)
     
 or, more succinctly:
 
-    sourceFiles in EditSource <++= baseDirectory { dir =>
+    editSourceFiles in EditSource <++= baseDirectory { dir =>
         (dir / "src" ** "*.txt").get ++
         (dir / "src" ** "*.md").get
     }
 
 ---
 
-**`targetDirectory`**
+**`editTargetDirectory`**
 
 ---
 
 The directory to which to write the edited versions of the source files.
 For example:
 
-    targetDirectory in EditSource <<= baseDirectory(_ / "target")
+    editTargetDirectory in EditSource <<= baseDirectory(_ / "target")
 
-See also `flatten`, below.
+See also `editFlatten`, below.
 
-
----
-
-**`flatten`**
 
 ---
 
-If `flatten` is `true`, then the edited files will all be placed directly
-in `targetDirectory`; if there are name clashes, then some files will be
-overwritten. If `flatten` is `false`, then the partial path to each source
+**`editFlatten`**
+
+---
+
+If `editFlatten` is `true`, then the edited files will all be placed directly
+in `editTargetDirectory`; if there are name clashes, then some files will be
+overwritten. If `editFlatten` is `false`, then the partial path to each source
 file is preserved in the target directory.
 
 An example will help clarify. Consider the following file tree:
@@ -99,20 +99,20 @@ An example will help clarify. Consider the following file tree:
 Let's assume you're editing all the files ending in ".md", into the *target*
 directory.
 
-    sourceFiles in EditSource <++= baseDirectory(d => (d / "src" ** "*.md").get)
+    editSourceFiles in EditSource <++= baseDirectory(d => (d / "src" ** "*.md").get)
 
-    targetDirectory in EditSource <<= baseDirectory(_ / "target")
+    editTargetDirectory in EditSource <<= baseDirectory(_ / "target")
     
 If you also set:
 
-    flatten in EditSource := true
+    editFlatten in EditSource := true
 
 the edit operation will put all the edited versions of all three files
 directly in the *target* directory.
 
 If, instead, you set:
 
-    flatten in EditSource := false
+    editFlatten in EditSource := false
 
 you'll end up with the following edited versions:
 
@@ -122,21 +122,19 @@ you'll end up with the following edited versions:
 
 ---
 
-**`variables`**
+**`editVariables`**
 
 ---
 
-`variables` is a sequence of `(variableName, value)` pairs. For instance,
-the following two lines define:
-
-* a `${projectName}` variable that substitutes the name of the project, and
-* a `${author}` variable
+`editVariables` is a sequence of `(variableName, value)` pairs. For
+instance, the following two lines define a `${projectName}` variable that
+substitutes the name of the project, and a `${author}` variable:
 
     name := "my-project"
 
-    variables in EditSource <+= name {name => ("projectName", name)}
+    editVariables in EditSource <+= name {name => ("projectName", name)}
 
-    variables in EditSource += ("author", "Brian Clapper")
+    editVariables in EditSource += ("author", "Brian Clapper")
 
 Inside a source file to be edited, variable references are of the form
 `${varname}`, as in the Unix shell. A shortened `$varname` is also support.
@@ -170,11 +168,11 @@ In addition to the variables you define in your build file, the
 
 ---
 
-**`substitutions`**
+**`editSubstitutions`**
 
 ---
 
-`substitutions` is a sequence of [regular expression][] substitutions, of
+`editSubstitutions` is a sequence of [regular expression][] substitutions, of
 the form:
 
     sub(regex, replacement)
@@ -191,7 +189,7 @@ for the [java.util.regex.Pattern][] class.
 For example, to replace the first occurrence of the word "test" in each
 line with "TEST", without regard to case, you might use:
 
-    substitutions in EditSource += sub("""(?i)\btest\b""".r, "TEST")
+    editSubstitutions in EditSource += sub("""(?i)\btest\b""".r, "TEST")
 
 The "`(?i)`" is the embedded option sequence that tells the regular expression
 parser to use case-blind comparison.
@@ -199,11 +197,11 @@ parser to use case-blind comparison.
 Similarly, to replace all occurrences of the word "test", *with* regard to
 case, you might use:
 
-    substitutions in EditSource += sub("""\btest\b""".r, "TEST", SubAll)
+    editSubstitutions in EditSource += sub("""\btest\b""".r, "TEST", SubAll)
 
 You can specify multiple substitutions, of course:
 
-    substitutions in EditSource ++= Seq(
+    editSubstitutions in EditSource ++= Seq(
         sub("""^#""".r, "//"),
         sub("""\b(?i)simple build tool\b""".r, "Scalable Build Tool", SubAll)
     )
