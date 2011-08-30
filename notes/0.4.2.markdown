@@ -5,3 +5,4 @@
         EditSource.sourceFiles in EditSource.Config <<= baseDirectory(...)
 
 * Converted code to conform with standard Scala coding style.
+* Now published for Scala 2.9.0 and 2.9.0-1, as well as 2.8.1.
