@@ -24,13 +24,7 @@ an older version (with fewer features and a different variable syntax)
 First, within your SBT project, create `project/plugins/build.sbt` (if it
 doesn't already exist) and add the following:
 
-    // The plugin is only published for 2.8.1
-    libraryDependencies <<= (scalaVersion, libraryDependencies) { (scv, deps) =>
-        if (scv == "2.8.1")
-            deps :+ "org.clapper" %% "sbt-editsource" % "0.4.1"
-        else
-            deps
-    }
+    libraryDependencies += "org.clapper" %% "sbt-editsource" % "0.4.2"
 
 Next, in your main project `build.sbt` file, add:
 
@@ -38,59 +32,77 @@ Next, in your main project `build.sbt` file, add:
 
 Now the plugin is available to your SBT builds.
 
-# Settings
+# Settings and Tasks
+
+The plugin provides the following new settings and tasks.
+
+**Note**: All settings and tasks are in an `EditSource` namespace, to avoid
+import clashes with identically named settings from other plugins. The
+pattern for accessing settings in this plugin is:
+
+    EditSource.settingName in EditSource.Config <<= ...
+
+Task access is similar.
+
+`EditSource` appears twice, which is regrettable; however, until [SBT][]
+supports proper namespaces, this appears to be the best way to isolate the
+plugin's definitions from clashing with other plugins, when multiple
+plugins are used (and, thus, automatically imported) into a `build.sbt`
+file.
+
+## Settings
 
 The plugin provides the following new settings.
 
 
 ---
 
-**`editSourceFiles`**
+**`EditSource.sourceFiles`**
 
 ---
 
 The source files to be edited. For instance, suppose you want to edit all
 files under "src" ending in ".txt". To do so, use:
 
-    editSourceFiles in EditSource <++= baseDirectory(d => (d / "src" ** "*.txt").get)
+    EditSource.sourceFiles in EditSource.Config <++= baseDirectory(d => (d / "src" ** "*.txt").get)
 
 If you also want to apply the edits to all files ending in ".md", use either:
 
-    editSourceFiles in EditSource <++= baseDirectory(d => (d / "src" ** "*.txt").get)
+    EditSource.sourceFiles in EditSource.Config <++= baseDirectory(d => (d / "src" ** "*.txt").get)
 
-    editSourceFiles in EditSource <++= baseDirectory(d => (d / "src" ** "*.md").get)
+    EditSource.sourceFiles in EditSource.Config <++= baseDirectory(d => (d / "src" ** "*.md").get)
     
 or, more succinctly:
 
-    editSourceFiles in EditSource <++= baseDirectory { dir =>
+    EditSource.sourceFiles in EditSource.Config <++= baseDirectory { dir =>
         (dir / "src" ** "*.txt").get ++
         (dir / "src" ** "*.md").get
     }
 
 ---
 
-**`editTargetDirectory`**
+**`targetDirectory`**
 
 ---
 
 The directory to which to write the edited versions of the source files.
 For example:
 
-    editTargetDirectory in EditSource <<= baseDirectory(_ / "target")
+    EditSource.targetDirectory in EditSource.Config <<= baseDirectory(_ / "target")
 
 See also `editFlatten`, below.
 
 
 ---
 
-**`editFlatten`**
+**`flatten`**
 
 ---
 
-If `editFlatten` is `true`, then the edited files will all be placed directly
-in `editTargetDirectory`; if there are name clashes, then some files will be
-overwritten. If `editFlatten` is `false`, then the partial path to each source
-file is preserved in the target directory.
+If `EditSource.flatten` is `true`, then the edited files will all be placed
+directly in `EditSource.targetDirectory`; if there are name clashes, then
+some files will be overwritten. If `EditSource.flatten` is `false`, then the
+partial path to each source file is preserved in the target directory.
 
 An example will help clarify. Consider the following file tree:
  
@@ -99,20 +111,22 @@ An example will help clarify. Consider the following file tree:
 Let's assume you're editing all the files ending in ".md", into the *target*
 directory.
 
-    editSourceFiles in EditSource <++= baseDirectory(d => (d / "src" ** "*.md").get)
+    EditSource.sourceFiles in EditSource.Config <++= baseDirectory(
+      d => (d / "src" ** "*.md").get
+    )
 
-    editTargetDirectory in EditSource <<= baseDirectory(_ / "target")
+    EditSource.targetDirectory in EditSource.COnfig <<= baseDirectory(_ / "target")
     
 If you also set:
 
-    editFlatten in EditSource := true
+    EditSource.flatten in EditSource.Config := true
 
 the edit operation will put all the edited versions of all three files
 directly in the *target* directory.
 
 If, instead, you set:
 
-    editFlatten in EditSource := false
+    EditSource.flatten in EditSource.Config := false
 
 you'll end up with the following edited versions:
 
@@ -122,19 +136,19 @@ you'll end up with the following edited versions:
 
 ---
 
-**`editVariables`**
+**`variables`**
 
 ---
 
-`editVariables` is a sequence of `(variableName, value)` pairs. For
+`EditSource.variables` is a sequence of `(variableName, value)` pairs. For
 instance, the following two lines define a `${projectName}` variable that
 substitutes the name of the project, and a `${author}` variable:
 
     name := "my-project"
 
-    editVariables in EditSource <+= name {name => ("projectName", name)}
+    EditSource.variables in EditSource.Config <+= name {name => ("projectName", name)}
 
-    editVariables in EditSource += ("author", "Brian Clapper")
+    EditSource.variables in EditSource.Config += ("author", "Brian Clapper")
 
 Inside a source file to be edited, variable references are of the form
 `${varname}`, as in the Unix shell. A shortened `$varname` is also support.
@@ -168,12 +182,12 @@ In addition to the variables you define in your build file, the
 
 ---
 
-**`editSubstitutions`**
+**`substitutions`**
 
 ---
 
-`editSubstitutions` is a sequence of [regular expression][] substitutions, of
-the form:
+`EditSource.substitutions` is a sequence of [regular expression][]
+substitutions, of the form:
 
     sub(regex, replacement)
     sub(regex, replacement, flags)
@@ -189,7 +203,7 @@ for the [java.util.regex.Pattern][] class.
 For example, to replace the first occurrence of the word "test" in each
 line with "TEST", without regard to case, you might use:
 
-    editSubstitutions in EditSource += sub("""(?i)\btest\b""".r, "TEST")
+    EditSource.substitutions in EditSource.Config += sub("""(?i)\btest\b""".r, "TEST")
 
 The "`(?i)`" is the embedded option sequence that tells the regular expression
 parser to use case-blind comparison.
@@ -197,11 +211,11 @@ parser to use case-blind comparison.
 Similarly, to replace all occurrences of the word "test", *with* regard to
 case, you might use:
 
-    editSubstitutions in EditSource += sub("""\btest\b""".r, "TEST", SubAll)
+    EditSource.substitutions in EditSource.Config += sub("""\btest\b""".r, "TEST", SubAll)
 
 You can specify multiple substitutions, of course:
 
-    editSubstitutions in EditSource ++= Seq(
+    EditSource.substitutions in EditSource.Config ++= Seq(
         sub("""^#""".r, "//"),
         sub("""\b(?i)simple build tool\b""".r, "Scalable Build Tool", SubAll)
     )

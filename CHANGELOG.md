@@ -3,6 +3,17 @@ title: "Change Log: sbt-editsource"
 layout: default
 ---
 
+Version 0.4.2:
+
+* Put plugin settings into a sub-object, so they don't clash with
+  other settings on (auto) import into `build.sbt`. Accessing a setting
+  is now accomplished with:
+
+        EditSource.configFile in EditSource.Config <<= baseDirectory(...)
+
+* Converted code to conform with standard Scala coding style.
+* Now published for Scala 2.9.0 and 2.9.0-1, as well as 2.8.1.
+
 Version 0.4.1:
 
 * Renamed various plugin settings and variables, so their names wouldn't
