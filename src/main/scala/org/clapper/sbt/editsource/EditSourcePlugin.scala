@@ -124,27 +124,27 @@ object EditSource extends Plugin
     //
     // variables in EditSource <+= organization {org => ("organization", org)}
     // variables in EditSource += ("foo", "bar")
-    val variables = SettingKey[Seq[Tuple2[String, String]]](
+    val editVariables = SettingKey[Seq[Tuple2[String, String]]](
         "variables", "variable -> value mappings")
 
     // e.g., replace all instances of "foo" (caseblind) with "bar", but
     // only if "foo" appears by itself.
     // substitutions in EditSource += ("""(?i)\bfoo\b""".r, "bar")
-    val substitutions = SettingKey[Seq[Substitution]](
+    val editSubstitutions = SettingKey[Seq[Substitution]](
         "substitutions", "regex -> replacement strings")
 
     // sources is a list of source files to edit.
-    val sourceFiles = SettingKey[Seq[File]]("source-files",
-                                            "List of sources to edit")
+    val editSourceFiles = SettingKey[Seq[File]]("source-files",
+                                                "List of sources to edit")
 
     // targetDirectory is the directory where edited files are to be written.
-    val targetDirectory = SettingKey[File]("target-directory",
-                                           "Where to copy edited files")
+    val editTargetDirectory = SettingKey[File]("target-directory",
+                                               "Where to copy edited files")
 
     // Whether or not to flatten the directory structure.
-    val flatten = SettingKey[Boolean]("flatten",
-                                      "Don't preserve source directory " +
-                                      "structure.")
+    val editFlatten = SettingKey[Boolean]("flatten",
+                                          "Don't preserve source directory " +
+                                          "structure.")
 
     val edit = TaskKey[Unit]("edit", "Fire up the editin' engine.")
     val clean = TaskKey[Unit]("clean", "Remove target files.")
@@ -154,17 +154,15 @@ object EditSource extends Plugin
     val editSourceSettings: Seq[sbt.Project.Setting[_]] =
     inConfig(EditSource)(Seq(
 
-        variables := Seq(("today", DateFormat.format(new Date))),
-        variables <+= scalaVersion (sv => ("scalaVersion", sv)),
-        variables <+= baseDirectory (bd => ("baseDirectory", bd.absolutePath)),
+        editVariables := Seq(("today", DateFormat.format(new Date))),
+        editVariables <+= scalaVersion(sv => ("scalaVersion", sv)),
+        editVariables <+= baseDirectory(bd => ("baseDirectory",
+                                               bd.absolutePath)),
 
-        flatten := true,
-
-        substitutions := Seq.empty[Substitution],
-
-        sourceFiles := Seq.empty[File],
-
-        targetDirectory <<= baseDirectory(_ / "target"),
+        editFlatten := true,
+        editSubstitutions := Seq.empty[Substitution],
+        editSourceFiles := Seq.empty[File],
+        editTargetDirectory <<= baseDirectory(_ / "target"),
 
         edit <<= editTask,
         clean <<= cleanTask
@@ -202,7 +200,8 @@ object EditSource extends Plugin
 
     private def cleanTask: Initialize[Task[Unit]] =
     {
-        (sourceFiles, targetDirectory, baseDirectory, flatten, streams) map 
+        (editSourceFiles, editTargetDirectory, baseDirectory, editFlatten,
+         streams) map 
         {
             (sourceFiles, targetDirectory, baseDirectory, flatten, streams) =>
 
@@ -223,8 +222,8 @@ object EditSource extends Plugin
 
     private def editTask: Initialize[Task[Unit]] =
     {
-        (sourceFiles, variables, substitutions, targetDirectory,
-         baseDirectory, flatten, streams) map
+        (editSourceFiles, editVariables, editSubstitutions,
+         editTargetDirectory, baseDirectory, editFlatten, streams) map
         {
             (sources, variables, subs, target, base, flatten, streams) =>
 

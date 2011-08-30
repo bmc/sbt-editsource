@@ -11,7 +11,7 @@
 
 name := "sbt-editsource"
 
-version := "0.4"
+version := "0.4.1"
 
 sbtPlugin := true
 
