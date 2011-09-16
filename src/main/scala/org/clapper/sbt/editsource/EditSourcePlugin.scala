@@ -162,7 +162,7 @@ object EditSource extends Plugin {
     val clean = TaskKey[Unit]("clean", "Remove target files.") in Config
   }
 
-  private val DateFormat = new SimpleDateFormat("yyyyy/mm/dd")
+  private val DateFormat = new SimpleDateFormat("yyyy/MM/dd")
 
   val editSourceSettings: Seq[sbt.Project.Setting[_]] =
     inConfig(EditSource.Config)(Seq(
