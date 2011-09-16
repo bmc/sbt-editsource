@@ -1,0 +1,47 @@
+## Change in Setting and Task Key Namespace
+
+*sbt-editsource* setting and task keys are already inside in inner
+`EditSource` object, for namespace scoping. This revision adds a trick by
+[Josh Suereth][], to make usage easier. Basically, the keys are now defined
+like this:
+
+    object EditSource extends Plugin {
+      object EditSource {
+        val Config = config("editsource") extend(Runtime)
+
+        val sources = SettingKey[Seq[File]](
+          "source-files", "List of sources to transform"
+        ) in Config
+    
+        val targetDirectory = SettingKey[File](
+          "target-directory", "Where to copy edited files"
+        ) in Config
+
+        ...
+      }
+    }
+
+Putting the `in Config` after *each* setting or task changes the `build.sbt`
+usage pattern from the clunky
+
+   EditSource.sources in EditSource <<= ...
+
+to the far more outrageously winning
+
+   EditSource.sources <<= ...
+
+[Josh Suereth]: http://suereth.blogspot.com/
+
+## Changes in Settings
+
+* `EditSource.sourceFiles` is now `EditSource.sources`, for consistency with
+  other SBT plugins and settings.
+
+* Merged in a patch from [David M. Lee][], changing `editTask` to return
+  a `Seq[File]`, allowing one to add `editTask` as a `resourceGenerator`,
+  running it as part of the `package` command. For instance:
+
+    resourceGenerators in Compile <+=
+      (EditSource.edit in EditSource.Config).identity
+
+[David M. Lee]: https://github.com/leedm777

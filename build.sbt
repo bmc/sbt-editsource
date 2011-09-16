@@ -11,7 +11,7 @@
 
 name := "sbt-editsource"
 
-version := "0.4.2"
+version := "0.5"
 
 sbtPlugin := true
 
@@ -24,7 +24,7 @@ scalaVersion := "2.8.1"
 
 scalacOptions ++= Seq("-deprecation", "-unchecked")
 
-crossScalaVersions := Seq("2.8.1", "2.9.0", "2.9.0-1")
+crossScalaVersions := Seq("2.8.1", "2.9.0", "2.9.0-1", "2.9.1")
 
 // ---------------------------------------------------------------------------
 // Posterous-SBT
@@ -35,15 +35,12 @@ libraryDependencies <<= (sbtVersion, scalaVersion, libraryDependencies) { (sbtv,
     else
         deps
 }
-
-(name in Posterous) := "sbt-editsource"
-
 // ---------------------------------------------------------------------------
 // Other dependendencies
 
 // External deps
 libraryDependencies ++= Seq(
-    "org.clapper" %% "grizzled-scala" % "1.0.7"
+    "org.clapper" %% "grizzled-scala" % "1.0.8"
 )
 
 // ---------------------------------------------------------------------------

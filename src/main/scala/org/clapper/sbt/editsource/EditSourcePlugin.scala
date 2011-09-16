@@ -115,6 +115,12 @@ object EditSource extends Plugin {
   // Plugin Settings and Task Declarations
   // -----------------------------------------------------------------
 
+  // NOTE: Using an inner object, with "in Config" after the Setting
+  // or Task definition allows this usage pattern:
+  //
+  //     EditSource.sources <<= ...
+  //
+  // The "in Config" trick is courtesy the masterful Josh Suereth.
   object EditSource {
 
     val Config = config("editsource") extend(Runtime)
@@ -124,29 +130,33 @@ object EditSource extends Plugin {
     // variables in EditSource <+= organization {org => ("organization", org)}
     // variables in EditSource += ("foo", "bar")
     val variables = SettingKey[Seq[Tuple2[String, String]]](
-      "variables", "variable -> value mappings")
+      "variables", "variable -> value mappings"
+    ) in Config
 
     // e.g., replace all instances of "foo" (caseblind) with "bar", but
     // only if "foo" appears by itself.
     // substitutions in EditSource += ("""(?i)\bfoo\b""".r, "bar")
     val substitutions = SettingKey[Seq[Substitution]](
-      "substitutions", "regex -> replacement strings")
+      "substitutions", "regex -> replacement strings"
+    ) in Config
 
     // sources is a list of source files to edit.
-    val sourceFiles = SettingKey[Seq[File]]("source-files",
-                                            "List of sources to edit")
+    val sources = SettingKey[Seq[File]](
+      "source-files", "List of sources to edit"
+    ) in Config
 
     // targetDirectory is the directory where edited files are to be written.
-    val targetDirectory = SettingKey[File]("target-directory",
-                                           "Where to copy edited files")
+    val targetDirectory = SettingKey[File](
+      "target-directory", "Where to copy edited files"
+    ) in Config
 
     // Whether or not to flatten the directory structure.
-    val flatten = SettingKey[Boolean]("flatten",
-                                          "Don't preserve source directory " +
-                                          "structure.")
+    val flatten = SettingKey[Boolean](
+      "flatten", "Don't preserve source directory structure."
+    ) in Config
 
-    val edit = TaskKey[Unit]("edit", "Fire up the editin' engine.")
-    val clean = TaskKey[Unit]("clean", "Remove target files.")
+    val edit = TaskKey[Unit]("edit", "Fire up the editin' engine.") in Config
+    val clean = TaskKey[Unit]("clean", "Remove target files.") in Config
   }
 
   private val DateFormat = new SimpleDateFormat("yyyyy/mm/dd")
@@ -161,7 +171,7 @@ object EditSource extends Plugin {
 
       EditSource.flatten := true,
       EditSource.substitutions := Seq.empty[Substitution],
-      EditSource.sourceFiles := Seq.empty[File],
+      EditSource.sources := Seq.empty[File],
       EditSource.targetDirectory <<= baseDirectory(_ / "target"),
 
       EditSource.edit <<= editTask,
@@ -199,7 +209,7 @@ object EditSource extends Plugin {
   // -----------------------------------------------------------------
 
   private def cleanTask: Initialize[Task[Unit]] = {
-    (EditSource.sourceFiles, EditSource.targetDirectory, baseDirectory,
+    (EditSource.sources, EditSource.targetDirectory, baseDirectory,
      EditSource.flatten, streams) map {
 
       (sourceFiles, targetDirectory, baseDirectory, flatten, streams) =>
@@ -218,7 +228,7 @@ object EditSource extends Plugin {
   }
 
   private def editTask: Initialize[Task[Unit]] = {
-    (EditSource.sourceFiles, EditSource.variables, EditSource.substitutions,
+    (EditSource.sources, EditSource.variables, EditSource.substitutions,
      EditSource.targetDirectory, baseDirectory, EditSource.flatten,
      streams) map {
 

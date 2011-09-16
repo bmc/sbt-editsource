@@ -11,28 +11,26 @@ libraryDependencies += "org.clapper" %% "grizzled-scala" % "1.0.7"
 
 seq(org.clapper.sbt.editsource.EditSource.editSourceSettings: _*)
 
-EditSource.sourceFiles in EditSource.Config <++= baseDirectory { d =>
+EditSource.sources <++= baseDirectory { d =>
     (d / "src" * "*.txt").get ++
     (d / "src" * "*.md").get
 }
 
 //sourceFiles in EditSource <++= 
 
-EditSource.targetDirectory in EditSource.Config <<= baseDirectory(_ / "target")
+EditSource.targetDirectory <<= baseDirectory(_ / "target")
 
-EditSource.variables in EditSource.Config <+= organization {org =>
-  ("organization", org)
-}
+EditSource.variables <+= organization {org => ("organization", org)}
 
-EditSource.variables in EditSource.Config += ("foo", "bar")
+EditSource.variables += ("foo", "bar")
 
-logLevel := Level.Debug
+EditSource.logLevel := Level.Debug
 
-EditSource.flatten in EditSource.Config := false
+EditSource.flatten  := false
 
-EditSource.substitutions in EditSource.Config += sub("""build""".r, "Build")
+EditSource.substitutions += sub("""build""".r, "Build")
 
-EditSource.substitutions in EditSource.Config ++= Seq(
+EditSource.substitutions ++= Seq(
     sub("""(?i)\btest\b""".r, "TEST", SubAll),
     sub("""\b(?i)simple build tool\b""".r, "Scalable Build Tool")
 )
