@@ -24,8 +24,6 @@ EditSource.variables <+= organization {org => ("organization", org)}
 
 EditSource.variables += ("foo", "bar")
 
-EditSource.logLevel := Level.Debug
-
 EditSource.flatten  := false
 
 EditSource.substitutions += sub("""build""".r, "Build")
