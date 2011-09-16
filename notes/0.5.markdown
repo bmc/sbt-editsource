@@ -24,22 +24,22 @@ like this:
 Putting the `in Config` after *each* setting or task changes the `build.sbt`
 usage pattern from the clunky
 
-   EditSource.sources in EditSource <<= ...
+    EditSource.sources in EditSource <<= ...
 
 to the far more outrageously winning
 
-   EditSource.sources <<= ...
+    EditSource.sources <<= ...
 
 [Josh Suereth]: http://suereth.blogspot.com/
 
 ## Changes in Settings
 
-* `EditSource.sourceFiles` is now `EditSource.sources`, for consistency with
-  other SBT plugins and settings.
+`EditSource.sourceFiles` is now `EditSource.sources`, for consistency with
+other SBT plugins and settings.
 
-* Merged in a patch from [David M. Lee][], changing `editTask` to return
-  a `Seq[File]`, allowing one to add `editTask` as a `resourceGenerator`,
-  running it as part of the `package` command. For instance:
+Merged in a patch from [David M. Lee][], changing `editTask` to return
+a `Seq[File]`, allowing one to add `editTask` as a `resourceGenerator`,
+running it as part of the `package` command. For instance:
 
     resourceGenerators in Compile <+=
       (EditSource.edit in EditSource.Config).identity
