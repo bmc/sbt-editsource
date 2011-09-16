@@ -1,1 +1,1 @@
-libraryDependencies += "org.clapper" %% "sbt-editsource" % "0.5"
+libraryDependencies += "org.clapper" %% "sbt-editsource" % "0.5.1"

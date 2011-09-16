@@ -1,0 +1,3 @@
+* [Issue #2][]: Corrected date/time formats.
+
+[Issue #2]: https://github.com/bmc/sbt-editsource/issues/2

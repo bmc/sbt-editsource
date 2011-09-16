@@ -50,8 +50,8 @@ private[editsource] class EditSourceStringTemplate(vars: Map[String, String]) {
   private val delegate = new UnixShellStringTemplate(dereference _,
                                                      """[a-zA-Z0-0_.]+""",
                                                      true)
-  private val TimeFormat = new SimpleDateFormat("yyyy/mm/dd HH:MM:ss")
-  private val DateFormat = new SimpleDateFormat("yyyy/mm/dd")
+  private val TimeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
+  private val DateFormat = new SimpleDateFormat("yyyy/MM/dd")
 
   @inline final def substitute(line: String) = delegate.substitute(line)
 
