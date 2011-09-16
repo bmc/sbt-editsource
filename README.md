@@ -12,11 +12,12 @@ output file. It supports two kinds of edits:
 * *sed*-like [regular expression][] substitution.
 
 [sed]: http://en.wikipedia.org/wiki/Sed
+[sbt-editsource]: http://software.clapper.org/sbt-editsource/
 [SBT]: http://code.google.com/p/simple-build-tool/
 
 # Using the Plugin
 
-Please see the [web site][] for detailed usage instructions.
+Please see the [web site][sbt-editsource] for detailed usage instructions.
 
 [web site]: http://software.clapper.org/sbt-editsource.html
 
