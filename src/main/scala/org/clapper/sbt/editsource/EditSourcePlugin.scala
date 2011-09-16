@@ -145,7 +145,7 @@ object EditSource extends Plugin {
                                           "Don't preserve source directory " +
                                           "structure.")
 
-    val edit = TaskKey[Unit]("edit", "Fire up the editin' engine.")
+    val edit = TaskKey[Seq[File]]("edit", "Fire up the editin' engine.")
     val clean = TaskKey[Unit]("clean", "Remove target files.")
   }
 
@@ -217,7 +217,7 @@ object EditSource extends Plugin {
     }
   }
 
-  private def editTask: Initialize[Task[Unit]] = {
+  private def editTask: Initialize[Task[Seq[File]]] = {
     (EditSource.sourceFiles, EditSource.variables, EditSource.substitutions,
      EditSource.targetDirectory, baseDirectory, EditSource.flatten,
      streams) map {
@@ -240,7 +240,7 @@ object EditSource extends Plugin {
                          baseDirectory: File,
                          flatten: Boolean,
                          log: Logger)
-                        (sourceFile: File): Unit = {
+                        (sourceFile: File): File = {
     val targetFile = targetFor(sourceFile,
                                targetDirectory,
                                baseDirectory,
@@ -277,6 +277,8 @@ object EditSource extends Plugin {
 
       out.close()
     }
+
+    targetFile
   }
 
   private def applyRegexs(line: String,
