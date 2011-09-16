@@ -3,6 +3,59 @@ title: "Change Log: sbt-editsource"
 layout: default
 ---
 
+Version 0.5:
+
+## Change in Setting and Task Key Namespace
+
+*sbt-editsource* setting and task keys are already inside in inner
+`EditSource` object, for namespace scoping. This revision adds a trick by
+[Josh Suereth][], to make usage easier. Basically, the keys are now defined
+like this:
+
+    object EditSource extends Plugin {
+      object EditSource {
+        val Config = config("editsource") extend(Runtime)
+
+        val sources = SettingKey[Seq[File]](
+          "source-files", "List of sources to transform"
+        ) in Config
+    
+        val targetDirectory = SettingKey[File](
+          "target-directory", "Where to copy edited files"
+        ) in Config
+
+        ...
+      }
+    }
+
+Putting the `in Config` after *each* setting or task changes the `build.sbt`
+usage pattern from the clunky
+
+    EditSource.sources in EditSource <<= ...
+
+to the far more outrageously winning
+
+    EditSource.sources <<= ...
+
+[Josh Suereth]: http://suereth.blogspot.com/
+
+## Changes in Settings
+
+`EditSource.sourceFiles` is now `EditSource.sources`, for consistency with
+other SBT plugins and settings.
+
+Merged in a patch from [David M. Lee][], changing `editTask` to return
+a `Seq[File]`, allowing one to add `editTask` as a `resourceGenerator`,
+running it as part of the `package` command. For instance:
+
+    resourceGenerators in Compile <+=
+      (EditSource.edit in EditSource.Config).identity
+
+[David M. Lee]: https://github.com/leedm777
+
+
+----
+
 Version 0.4.2:
 
 * Put plugin settings into a sub-object, so they don't clash with
@@ -14,10 +67,14 @@ Version 0.4.2:
 * Converted code to conform with standard Scala coding style.
 * Now published for Scala 2.9.0 and 2.9.0-1, as well as 2.8.1.
 
+----
+
 Version 0.4.1:
 
 * Renamed various plugin settings and variables, so their names wouldn't
   clash, on import, with other plugins.
+
+----
 
 Version 0.4:
 
@@ -34,6 +91,8 @@ Version 0.4:
 
 [SBT]: http://code.google.com/p/simple-build-tool/
 
+----
+
 Version 0.3:
 
 * Now published to the [Scala Tools Maven repository][], which [SBT][]
@@ -43,11 +102,15 @@ Version 0.3:
 [Scala Tools Maven repository]: http://www.scala-tools.org/repo-releases/
 [SBT]: http://code.google.com/p/simple-build-tool/
 
+----
+
 Version 0.3.1:
 
 * The Markdown plugin still uses the Showdown Javascript Markdown parser,
   but the host domain (`attacklab.net`) is offline. Switched to use a
   copy cached in the `sbt-plugins` GitHub downloads area.
+
+----
 
 Version 0.2:
 
@@ -58,11 +121,15 @@ Version 0.2:
 
 [IzPack plugin]: http://software.clapper.org/sbt-plugins/izpack.html
 
+----
+
 Version 0.2.2:
 
 * Now uses [Posterous-SBT][] SBT plugin.
 
 [Posterous-SBT]: http://github.com/n8han/posterous-sbt
+
+----
 
 Version 0.2.1:
 
@@ -73,6 +140,8 @@ Version 0.2.1:
 
 [IzPack plugin]: http://software.clapper.org/sbt-plugins/izpack.html
 [Markdown plugin]: http://software.clapper.org/sbt-plugins/markdown.html
+
+----
 
 Version 0.1:
 
