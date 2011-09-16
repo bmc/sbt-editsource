@@ -24,7 +24,7 @@ an older version (with fewer features and a different variable syntax)
 First, within your SBT project, create `project/plugins/build.sbt` (if it
 doesn't already exist) and add the following:
 
-    libraryDependencies += "org.clapper" %% "sbt-editsource" % "0.5"
+    libraryDependencies += "org.clapper" %% "sbt-editsource" % "0.5.1"
 
 Next, in your main project `build.sbt` file, add:
 

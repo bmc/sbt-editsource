@@ -3,6 +3,14 @@ title: "Change Log: sbt-editsource"
 layout: default
 ---
 
+Version 0.5.1:
+
+* [Issue #2][]: Corrected date/time formats.
+
+[Issue #2]: https://github.com/bmc/sbt-editsource/issues/2
+
+----
+
 Version 0.5:
 
 ## Change in Setting and Task Key Namespace
