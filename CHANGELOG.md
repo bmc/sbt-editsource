@@ -3,6 +3,13 @@ title: "Change Log: sbt-editsource"
 layout: default
 ---
 
+Version 0.5.2:
+
+* `EditSource.editSourceSettings` is now deprecated, in favor of
+  just `EditSource.settings`.
+
+----
+
 Version 0.5.1:
 
 * [Issue #2][]: Corrected date/time formats.
