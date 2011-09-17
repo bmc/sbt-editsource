@@ -9,7 +9,7 @@ scalaVersion := "2.8.1"
 
 libraryDependencies += "org.clapper" %% "grizzled-scala" % "1.0.7"
 
-seq(org.clapper.sbt.editsource.EditSource.editSourceSettings: _*)
+seq(EditSource.settings: _*)
 
 EditSource.sources <++= baseDirectory { d =>
     (d / "src" * "*.txt").get ++

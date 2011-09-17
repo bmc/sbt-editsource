@@ -160,12 +160,10 @@ object EditSource extends Plugin {
     ) in Config
 
     val clean = TaskKey[Unit]("clean", "Remove target files.") in Config
-  }
 
-  private val DateFormat = new SimpleDateFormat("yyyy/MM/dd")
+    private val DateFormat = new SimpleDateFormat("yyyy/MM/dd")
 
-  val editSourceSettings: Seq[sbt.Project.Setting[_]] =
-    inConfig(EditSource.Config)(Seq(
+    val settings: Seq[sbt.Project.Setting[_]] = inConfig(EditSource.Config)(Seq(
 
       EditSource.variables := Seq(("today", DateFormat.format(new Date))),
       EditSource.variables <+= scalaVersion(sv => ("scalaVersion", sv)),
@@ -180,10 +178,14 @@ object EditSource extends Plugin {
       EditSource.edit <<= editTask,
       EditSource.clean <<= cleanTask
     )) ++
-  inConfig(Compile)(Seq(
-    // Hook our clean into the global one.
-    clean in Global <<= (EditSource.clean in EditSource.Config).identity
-  ))
+    inConfig(Compile)(Seq(
+      // Hook our clean into the global one.
+      clean in Global <<= (EditSource.clean in EditSource.Config).identity
+    ))
+  }
+
+  // Deprecated; here for backward compatibility.
+  val editSourceSettings = EditSource.settings
 
   // -----------------------------------------------------------------
   // Public Methods

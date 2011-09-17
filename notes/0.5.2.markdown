@@ -1,0 +1,2 @@
+* `EditSource.editSourceSettings` is now deprecated, in favor of
+  just `EditSource.settings`.
