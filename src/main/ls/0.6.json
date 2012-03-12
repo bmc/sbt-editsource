@@ -1,0 +1,27 @@
+
+{
+ "organization":"org.clapper",
+ "name":"sbt-editsource",
+ "version":"0.6",
+ "description":"SBT plugin to edit files on the fly",
+ "site":"",
+ "tags":["sed","edit","filter"],
+ "docs":"",
+ "licenses": [],
+ "resolvers": ["http://scala-tools.org/repo-releases"],
+ "dependencies": [{
+   "organization":"com.jsuereth",
+   "name": "xsbt-gpg-plugin",
+   "version": "0.6"
+  },{
+   "organization":"me.lessis",
+   "name": "ls-sbt",
+   "version": "0.1.1"
+  },{
+   "organization":"org.clapper",
+   "name": "grizzled-scala",
+   "version": "1.0.10"
+  }],
+ "scalas": ["2.8.1","2.9.0","2.9.0-1","2.9.1"],
+ "sbt": true
+}

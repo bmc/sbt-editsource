@@ -1,17 +1,15 @@
 
 name := "sbt-editsource-test"
 
-version := "0.1"
+version := "0.2"
 
 organization := "org.clapper"
 
-scalaVersion := "2.8.1"
-
-libraryDependencies += "org.clapper" %% "grizzled-scala" % "1.0.7"
+libraryDependencies += "org.clapper" %% "grizzled-scala" % "1.0.10"
 
 seq(EditSource.settings: _*)
 
-EditSource.sources <++= baseDirectory { d =>
+(sources in EditSource.Config) <++= baseDirectory map { d =>
     (d / "src" * "*.txt").get ++
     (d / "src" * "*.md").get
 }
@@ -20,15 +18,15 @@ EditSource.sources <++= baseDirectory { d =>
 
 EditSource.targetDirectory <<= baseDirectory(_ / "target")
 
-EditSource.variables <+= organization {org => ("organization", org)}
+EditSource.variables in EditSource.Config <+= organization {org => ("organization", org)}
 
-EditSource.variables += ("foo", "bar")
+EditSource.variables in EditSource.Config += ("foo", "bar")
 
 EditSource.flatten  := false
 
-EditSource.substitutions += sub("""build""".r, "Build")
+EditSource.substitutions in EditSource.Config += sub("""build""".r, "Build")
 
-EditSource.substitutions ++= Seq(
+EditSource.substitutions in EditSource.Config ++= Seq(
     sub("""(?i)\btest\b""".r, "TEST", SubAll),
     sub("""\b(?i)simple build tool\b""".r, "Scalable Build Tool")
 )

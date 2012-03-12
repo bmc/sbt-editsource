@@ -1,0 +1,2 @@
+* Updated to SBT 0.11.2.
+* Added support for *ls.implicit.ly* metadata.
