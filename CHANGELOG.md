@@ -3,6 +3,12 @@ title: "Change Log: sbt-editsource"
 layout: default
 ---
 
+Version 0.6.1:
+
+* Fixed Ivy-related publishing issue.
+
+----
+
 Version 0.6:
 
 * Updated to SBT 0.11.2.
