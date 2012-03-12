@@ -60,17 +60,17 @@ The plugin provides the following new settings.
 The source files to be edited. For instance, suppose you want to edit all
 files under "src" ending in ".txt". To do so, use:
 
-    EditSource.sources in EditSource.Config <++= baseDirectory(d => (d / "src" ** "*.txt").get)
+    sources in EditSource.Config <++= baseDirectory(d => (d / "src" ** "*.txt").get)
 
 If you also want to apply the edits to all files ending in ".md", use either:
 
-    EditSource.sources in EditSource.Config <++= baseDirectory(d => (d / "src" ** "*.txt").get)
+    sources in EditSource.Config <++= baseDirectory(d => (d / "src" ** "*.txt").get)
 
-    EditSource.sources in EditSource.Config <++= baseDirectory(d => (d / "src" ** "*.md").get)
+    sources in EditSource.Config <++= baseDirectory(d => (d / "src" ** "*.md").get)
     
 or, more succinctly:
 
-    EditSource.sources in EditSource.Config <++= baseDirectory { dir =>
+    sources in EditSource.Config <++= baseDirectory { dir =>
         (dir / "src" ** "*.txt").get ++
         (dir / "src" ** "*.md").get
     }
@@ -107,7 +107,7 @@ An example will help clarify. Consider the following file tree:
 Let's assume you're editing all the files ending in ".md", into the *target*
 directory.
 
-    EditSource.sources in EditSource.Config <++= baseDirectory(
+    sources in EditSource.Config <++= baseDirectory(
       d => (d / "src" ** "*.md").get
     )
 
