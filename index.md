@@ -15,7 +15,7 @@ output file. It supports two kinds of edits:
 
 Each of these capabilities is explained in more detail, below.
 
-**This plugin only works with SBT 0.10.x.** If you're using SBT 0.7, there's
+**This plugin only works with SBT 0.11.x.** If you're using SBT 0.7, there's
 an older version (with fewer features and a different variable syntax)
 [here](http://software.clapper.org/sbt-plugins/editsource.html).
 
