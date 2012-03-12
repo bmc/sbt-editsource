@@ -11,11 +11,17 @@
 
 name := "sbt-editsource"
 
-version := "0.6"
+version := "0.6.1"
 
 sbtPlugin := true
 
 organization := "org.clapper"
+
+licenses := Seq("BSD-like" ->
+  url("http://software.clapper.org/sbt-editsource/license.html")
+)
+
+description := "SBT plugin to edit files on the fly"
 
 // ---------------------------------------------------------------------------
 // Additional compiler options and plugins
@@ -28,7 +34,7 @@ seq(lsSettings :_*)
 
 (LsKeys.tags in LsKeys.lsync) := Seq("sed", "edit", "filter")
 
-(description in LsKeys.lsync) := "SBT plugin to edit files on the fly"
+(description in LsKeys.lsync) <<= description(d => d)
 
 // ---------------------------------------------------------------------------
 // Other dependendencies
@@ -49,6 +55,12 @@ publishTo <<= (version) { version: String =>
                        ("sbt-plugin-releases", scalasbt+"sbt-plugin-releases")
    Some(Resolver.url(name, new URL(url))(Resolver.ivyStylePatterns))
 }
+
+publishMavenStyle := false
+
+publishArtifact in (Compile, packageBin) := true
+
+publishArtifact in (Test, packageBin) := false
 
 publishArtifact in (Compile, packageDoc) := false
 
