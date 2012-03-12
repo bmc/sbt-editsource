@@ -7,3 +7,4 @@ src/testproject/project/target/
 src/testproject/target/
 target/
 src/testproject/.history
+*.sublime-*
