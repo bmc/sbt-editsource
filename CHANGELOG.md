@@ -3,6 +3,10 @@ title: "Change Log: sbt-editsource"
 layout: default
 ---
 
+Version 0.6.2:
+
+* Rebuilt with newer version of Grizzled Scala, to fix a dependency problem.
+
 Version 0.6.1:
 
 * Fixed Ivy-related publishing issue.
