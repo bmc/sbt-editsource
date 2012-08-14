@@ -28,7 +28,7 @@ description := "SBT plugin to edit files on the fly"
 
 scalacOptions ++= Seq("-deprecation", "-unchecked")
 
-crossScalaVersions := Seq("2.9.1")
+scalaVersion := "2.9.2"
 
 seq(lsSettings :_*)
 
@@ -41,7 +41,7 @@ seq(lsSettings :_*)
 
 // External deps
 libraryDependencies ++= Seq(
-    "org.clapper" %% "grizzled-scala" % "1.0.12"
+    "org.clapper" % "grizzled-scala_2.9.1" % "1.0.12"
 )
 
 // ---------------------------------------------------------------------------
