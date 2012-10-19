@@ -1,0 +1,5 @@
+* Updated to SBT 0.12.
+* Now cross-builds against both Scala 2.9.1 and Scala 2.9.2.
+* Doug Tangren's (excellent) [ls](http://ls.implicit.ly/) SBT plugin is now
+  specified directly in the project, to make it easier for others to build
+  this plugin.
