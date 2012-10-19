@@ -5,18 +5,18 @@ layout: withTOC
 
 # Introduction
 
-[sbt-editsource][] is a text substitution plugin for [SBT][] 0.11.x. In a
-way, it's a poor man's [*sed*][](1), for SBT. It provides the ability to
-apply line-by-line substitutions to a source text file, producing an edited
-output file. It supports two kinds of edits:
+[sbt-editsource][] is a text substitution plugin for [SBT][] 0.11.x and
+greater. In a way, it's a poor man's [*sed*][](1), for SBT. It provides the
+ability to apply line-by-line substitutions to a source text file, producing an
+edited output file. It supports two kinds of edits:
 
 * Variable substitution, where `${var}` is replaced by a value.
 * *sed*-like [regular expression][] substitution.
 
 Each of these capabilities is explained in more detail, below.
 
-**This plugin only works with SBT 0.11.x.** If you're using SBT 0.7, there's
-an older version (with fewer features and a different variable syntax)
+**This plugin only works with SBT 0.11.x or better.** If you're using SBT 0.7,
+there's an older version (with fewer features and a different variable syntax)
 [here](http://software.clapper.org/sbt-plugins/editsource.html).
 
 # Getting the Plugin
@@ -24,7 +24,7 @@ an older version (with fewer features and a different variable syntax)
 First, within your SBT project, create `project/plugins/build.sbt` (if it
 doesn't already exist) and add the following:
 
-    libraryDependencies += "org.clapper" %% "sbt-editsource" % "0.6.2"
+    libraryDependencies += "org.clapper" %% "sbt-editsource" % "0.6.3"
 
 Next, in your main project `build.sbt` file, add:
 
@@ -277,7 +277,7 @@ request. Along with any patch you send:
 [Scala Tools Maven repository]: http://www.scala-tools.org/repo-releases/
 [SBT]: https://github.com/harrah/xsbt/
 [bmc@clapper.org]: mailto:bmc@clapper.org
-[changelog]: CHANGELOG.html
+[changelog]: https://github.com/bmc/sbt-editsource/blob/master/CHANGELOG.md
 [sed]: http://en.wikipedia.org/wiki/Sed
 [regular expression]: http://download.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html
 [java.util.regex.Pattern]: http://download.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html
