@@ -3,10 +3,10 @@ Edit Source SBT Plugin
 
 # Introduction
 
-[sbt-editsource][] is a text substitution plugin for [SBT][] 0.10.x. In a
-way, it's a poor man's [*sed*][](1), for SBT. It provides the ability to
-apply line-by-line substitutions to a source text file, producing an edited
-output file. It supports two kinds of edits:
+[sbt-editsource][] is a text substitution plugin for [SBT][] 0.10.x and
+greater. In a way, it's a poor man's [*sed*][](1), for SBT. It provides the
+ability to apply line-by-line substitutions to a source text file, producing an
+edited output file. It supports two kinds of edits:
 
 * Variable substitution, where `${var}` is replaced by a value.
 * *sed*-like [regular expression][] substitution.
@@ -26,7 +26,7 @@ Please see the [web site][sbt-editsource] for detailed usage instructions.
 This plugin is released under a BSD license, adapted from
 <http://opensource.org/licenses/bsd-license.php>
 
-Copyright &copy; 2010-2011, Brian M. Clapper
+Copyright &copy; 2010-2012, Brian M. Clapper
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
