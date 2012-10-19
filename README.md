@@ -3,7 +3,7 @@ Edit Source SBT Plugin
 
 # Introduction
 
-[sbt-editsource][] is a text substitution plugin for [SBT][] 0.10.x and
+[sbt-editsource][] is a text substitution plugin for [SBT][] 0.11.x and
 greater. In a way, it's a poor man's [*sed*][](1), for SBT. It provides the
 ability to apply line-by-line substitutions to a source text file, producing an
 edited output file. It supports two kinds of edits:
