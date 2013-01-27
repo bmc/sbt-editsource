@@ -1,3 +1,8 @@
+Version 0.6.5:
+* Fixed problem with dependency versioning.
+
+----
+
 Version 0.6.3:
 
 * Updated to SBT 0.12.

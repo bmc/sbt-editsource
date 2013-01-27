@@ -11,7 +11,7 @@
 
 name := "sbt-editsource"
 
-version := "0.6.3"
+version := "0.6.5"
 
 sbtPlugin := true
 
@@ -40,9 +40,7 @@ seq(lsSettings :_*)
 // Other dependendencies
 
 // External deps
-libraryDependencies ++= Seq(
-    "org.clapper" %% "grizzled-scala" % "1.0.13"
-)
+libraryDependencies += "org.clapper" %% "grizzled-scala" % "1.0.13"
 
 // ---------------------------------------------------------------------------
 // Publishing criteria
