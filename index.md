@@ -5,7 +5,7 @@ layout: withTOC
 
 # Introduction
 
-[sbt-editsource][] is a text substitution plugin for [SBT][] 0.11.x and
+[sbt-editsource][] is a text substitution plugin for [SBT][] 0.13.x and
 greater. In a way, it's a poor man's [*sed*][](1), for SBT. It provides the
 ability to apply line-by-line substitutions to a source text file, producing an
 edited output file. It supports two kinds of edits:
@@ -21,30 +21,24 @@ there's an older version (with fewer features and a different variable syntax)
 
 # Getting the Plugin
 
-First, within your SBT project, create `project/plugins/build.sbt` (if it
+Within your SBT project, create `project/plugins/build.sbt` (if it
 doesn't already exist) and add the following:
 
-    addSbtPlugin("org.clapper" % "sbt-editsource" % "0.6.5")
-
-Next, in your main project `build.sbt` file, add:
-
-    seq(EditSource.settings: _*)
-
-Now the plugin and its settings are available to your SBT builds.
+    addSbtPlugin("org.clapper" % "sbt-editsource" % "0.7.0")
 
 # Settings and Tasks
 
 The plugin provides the following new settings and tasks.
 
 **Note**: sbt-editsource uses predefined SBT settings, where possible (e.g.,
-`sources`). Where sbt-editsource defines its own settings, *those* settings are
-in an `EditSource` namespace, to avoid import clashes with identically named
-settings from other plugins. The pattern for accessing settings in this plugin
-is:
+`sources`). Of course, that's not always possible. To be sure you're updating
+the correct setting, *always* use the form:
 
-    EditSource.settingName in EditSource.Config <<= ...
+    settingName in EditSource
 
-Task access is similar.
+For instance:
+
+    flatten in EditSource := false
 
 ## Settings
 
@@ -60,17 +54,17 @@ The plugin provides the following new settings.
 The source files to be edited. For instance, suppose you want to edit all
 files under "src" ending in ".txt". To do so, use:
 
-    sources in EditSource.Config <++= baseDirectory.map(d => (d / "src" ** "*.txt").get)
+    sources in EditSource <++= baseDirectory.map(d => (d / "src" ** "*.txt").get)
 
 If you also want to apply the edits to all files ending in ".md", use either:
 
-    sources in EditSource.Config <++= baseDirectory.map(d => (d / "src" ** "*.txt").get)
+    sources in EditSource <++= baseDirectory.map(d => (d / "src" ** "*.txt").get)
 
-    sources in EditSource.Config <++= baseDirectory.map(d => (d / "src" ** "*.md").get)
+    sources in EditSource <++= baseDirectory.map(d => (d / "src" ** "*.md").get)
     
 or, more succinctly:
 
-    sources in EditSource.Config <++= baseDirectory.map { dir =>
+    sources in EditSource <++= baseDirectory.map { dir =>
         (dir / "src" ** "*.txt").get ++
         (dir / "src" ** "*.md").get
     }
@@ -84,9 +78,9 @@ or, more succinctly:
 The directory to which to write the edited versions of the source files.
 For example:
 
-    EditSource.targetDirectory in EditSource.Config <<= baseDirectory(_ / "target")
+    targetDirectory in EditSource <<= baseDirectory(_ / "target")
 
-See also `editFlatten`, below.
+See also `flatten`, below.
 
 
 ---
@@ -95,9 +89,9 @@ See also `editFlatten`, below.
 
 ---
 
-If `EditSource.flatten` is `true`, then the edited files will all be placed
-directly in `EditSource.targetDirectory`; if there are name clashes, then
-some files will be overwritten. If `EditSource.flatten` is `false`, then the
+If `flatten` is `true`, then the edited files will all be placed
+directly in `targetDirectory`; if there are name clashes, then
+some files will be overwritten. If `flatten` is `false`, then the
 partial path to each source file is preserved in the target directory.
 
 An example will help clarify. Consider the following file tree:
@@ -107,22 +101,22 @@ An example will help clarify. Consider the following file tree:
 Let's assume you're editing all the files ending in ".md", into the *target*
 directory.
 
-    sources in EditSource.Config <++= baseDirectory(
+    sources in EditSource <++= baseDirectory(
       d => (d / "src" ** "*.md").get
     )
 
-    EditSource.targetDirectory in EditSource.Config <<= baseDirectory(_ / "target")
+    targetDirectory in EditSource <<= baseDirectory(_ / "target")
     
 If you also set:
 
-    EditSource.flatten in EditSource.Config := true
+    flatten in EditSource := true
 
 the edit operation will put all the edited versions of all three files
 directly in the *target* directory.
 
 If, instead, you set:
 
-    EditSource.flatten in EditSource.Config := false
+    flatten in EditSource := false
 
 you'll end up with the following edited versions:
 
@@ -142,9 +136,9 @@ substitutes the name of the project, and a `${author}` variable:
 
     name := "my-project"
 
-    EditSource.variables in EditSource.Config <+= name {name => ("projectName", name)}
+    variables in EditSource <+= name {name => ("projectName", name)}
 
-    EditSource.variables in EditSource.Config += ("author", "Brian Clapper")
+    variables in EditSource += ("author", "Brian Clapper")
 
 Inside a source file to be edited, variable references are of the form
 `${varname}`, as in the Unix shell. A shortened `$varname` is also support.
@@ -182,8 +176,7 @@ In addition to the variables you define in your build file, the
 
 ---
 
-`EditSource.substitutions` is a sequence of [regular expression][]
-substitutions, of the form:
+`substitutions` is a sequence of [regular expression][] substitutions, of the form:
 
     sub(regex, replacement)
     sub(regex, replacement, flags)
@@ -199,7 +192,7 @@ for the [java.util.regex.Pattern][] class.
 For example, to replace the first occurrence of the word "test" in each
 line with "TEST", without regard to case, you might use:
 
-    EditSource.substitutions in EditSource.Config += sub("""(?i)\btest\b""".r, "TEST")
+    substitutions in EditSource += sub("""(?i)\btest\b""".r, "TEST")
 
 The "`(?i)`" is the embedded option sequence that tells the regular expression
 parser to use case-blind comparison.
@@ -207,11 +200,11 @@ parser to use case-blind comparison.
 Similarly, to replace all occurrences of the word "test", *with* regard to
 case, you might use:
 
-    EditSource.substitutions in EditSource.Config += sub("""\btest\b""".r, "TEST", SubAll)
+    substitutions in EditSource += sub("""\btest\b""".r, "TEST", SubAll)
 
 You can specify multiple substitutions, of course:
 
-    EditSource.substitutions in EditSource.Config ++= Seq(
+    substitutions in EditSource ++= Seq(
         sub("""^#""".r, "//"),
         sub("""\b(?i)simple build tool\b""".r, "Scalable Build Tool", SubAll)
     )
