@@ -8,3 +8,4 @@ src/testproject/target/
 target/
 src/testproject/.history
 *.sublime-*
+/.idea

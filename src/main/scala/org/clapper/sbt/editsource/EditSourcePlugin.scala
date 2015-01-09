@@ -3,7 +3,7 @@
   This software is released under a BSD license, adapted from
   http://opensource.org/licenses/bsd-license.php
 
-  Copyright (c) 2010-2011, Brian M. Clapper
+  Copyright (c) 2010-2015, Brian M. Clapper
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -38,8 +38,7 @@
 package org.clapper.sbt.editsource
 
 import sbt._
-import Keys._
-import Project.Initialize
+import sbt.Keys._
 
 import java.io.{File, FileWriter, PrintWriter}
 import java.text.SimpleDateFormat
@@ -47,8 +46,8 @@ import java.util.Date
 
 import scala.io.Source
 import scala.util.matching.Regex
-import scala.Enumeration
 import scala.annotation.tailrec
+import scala.language.implicitConversions
 
 import grizzled.file.{util => FileUtil}
 
@@ -58,7 +57,8 @@ import grizzled.file.{util => FileUtil}
  *
  * To use this plugin, mix it into your SBT project.
  */
-object EditSourcePlugin extends Plugin {
+object EditSourcePlugin extends AutoPlugin {
+
   // -----------------------------------------------------------------
   // Classes, traits, implicits
   // -----------------------------------------------------------------
@@ -66,18 +66,14 @@ object EditSourcePlugin extends Plugin {
   /**
    * A substitution option (e.g., "substitute all")
    */
-  sealed trait SubOpt {val code: Int}
+  object SubOpt extends Enumeration {
+    type SubOpt = Value
 
-  /**
-   * Default: No substitutions.
-   */
-  case object NoSubOpts extends SubOpt { val code = 0 }
+    val NoSubstitutionOpts = Value(0x01)
+    val SubstituteAll      = Value(0x02)
+  }
 
-  /**
-   * Substitute all occurrences of the matched expression in each
-   * line, instead of just the first occurrence.
-   */
-  case object SubAll extends SubOpt { val code = 1 }
+  import SubOpt._
 
   /**
    * Container for substitution options.
@@ -86,7 +82,7 @@ object EditSourcePlugin extends Plugin {
     // Create a bit mask of the code values.
 
     private[editsource] val codes =
-      options.map{_.code}.foldLeft(0) {(a, b) => a | b}
+      options.map{_.id}.foldLeft(0) {(a, b) => a | b}
 
     def this(opt: SubOpt) = this(List(opt))
 
@@ -94,7 +90,7 @@ object EditSourcePlugin extends Plugin {
      * Determine whether a set of substitution options contains a
      * particular option.
      */
-    @inline final def contains(opt: SubOpt) = (codes & opt.code) != 0
+    @inline final def contains(opt: SubOpt) = (codes & opt.id) != 0
   }
 
   /**
@@ -115,9 +111,14 @@ object EditSourcePlugin extends Plugin {
   // Plugin Settings and Task Declarations
   // -----------------------------------------------------------------
 
-  object EditSource {
+  override def trigger = allRequirements
 
-    val Config = config("editsource") extend(Runtime)
+  object autoImport { // Stuff that's autoimported into the user's build.sbt
+
+    val SubAll = SubOpt.SubstituteAll
+    val NoSubOpts = SubOpt.NoSubstitutionOpts
+
+    val EditSource = config("editsource")
 
     val targetDirectory = SettingKey[File](
       "target-directory", "Where to copy the edited files"
@@ -127,7 +128,7 @@ object EditSourcePlugin extends Plugin {
     //
     // variables in EditSource <+= organization {org => ("organization", org)}
     // variables in EditSource += ("foo", "bar")
-    val variables = SettingKey[Seq[Tuple2[String, String]]](
+    val variables = SettingKey[Seq[(String, String)]](
       "variables", "variable -> value mappings"
     )
 
@@ -147,90 +148,84 @@ object EditSourcePlugin extends Plugin {
       "edit", "Fire up the editin' engine."
     )
 
-    val clean = TaskKey[Unit]("clean", "Remove target files") in Config
+    val clean = TaskKey[Unit]("clean", "Remove target files") in EditSource
 
     private val DateFormat = new SimpleDateFormat("yyyy/MM/dd")
 
-    val settings: Seq[sbt.Project.Setting[_]] = inConfig(EditSource.Config)(Seq(
-
+    lazy val baseSettings: Seq[Def.Setting[_]] = Seq(
       sources := Seq.empty[File],
 
       variables := Seq(("today", DateFormat.format(new Date))),
       variables <+= baseDirectory(bd => ("baseDirectory", bd.absolutePath)),
       variables <+= scalaVersion(sv => ("scalaVersion", sv)),
 
-      flatten := true,
-      substitutions := Seq.empty[Substitution],
-      sources := Seq.empty[File],
-      targetDirectory <<= baseDirectory(_ / "target"),
+      flatten         := true,
+      substitutions   := Seq.empty[Substitution],
+      sources         := Seq.empty[File],
+      targetDirectory := baseDirectory(_ / "target").value,
 
-      edit <<= editTask,
-      clean <<= cleanTask
-    )) ++
-    inConfig(Compile)(Seq(
-      // Hook our clean into the global one.
-      clean in Global <<= (clean in EditSource.Config)
-    ))
-  }
+      edit in EditSource  := EditSourceRunner.edit(EditSource).value,
+      clean in EditSource := EditSourceRunner.clean(EditSource).value
+    )
 
-  // Deprecated; here for backward compatibility.
-  val editSourceSettings = EditSource.settings
-
-  // -----------------------------------------------------------------
-  // Public Methods
-  // -----------------------------------------------------------------
-
-  /**
-   * Convenience method to make it easier to define substitutions
-   * in a build file. Example:
-   *
-   * {{{
-   * substitutions in EditSource := Seq(
-   *     sub("""\b(?i)test\b""".r, "TEST", SubAll),
-  *     sub("""\b(?i)simple build tool\b""".r, "Scalable Build Tool")
-  * )
-  * }}}
-  *
-  * @param regex        The regular expression to find
-  * @param substitution The string to substitute
-  * @param opts         Any additional options
-  */
-  def sub(regex: Regex, substitution: String, opts: SubOpts = NoSubOpts) =
-    Substitution(regex, substitution, opts)
-
-  // -----------------------------------------------------------------
-  // Task Implementations
-  // -----------------------------------------------------------------
-
-  private def cleanTask: Initialize[Task[Unit]] = {
-    ((sources in EditSource.Config), (EditSource.targetDirectory),
-     baseDirectory, EditSource.flatten, streams) map {
-
-      (sourceFiles, targetDirectory, baseDirectory, flatten, streams) =>
-
-        for (sourceFile <- sourceFiles) {
-          val targetFile = targetFor(sourceFile,
-                                     targetDirectory,
-                                     baseDirectory,
-                                     flatten)
-          if (targetFile.exists) {
-            streams.log.debug("Deleting \"%s\"" format targetFile)
-            targetFile.delete
-          }
-        }
+    /**
+     * Convenience method to make it easier to define substitutions
+     * in a build file. Example:
+     *
+     * {{{
+     * substitutions in EditSource := Seq(
+     *     sub("""\b(?i)test\b""".r, "TEST", SubAll),
+     *     sub("""\b(?i)simple build tool\b""".r, "Scalable Build Tool")
+     * )
+     * }}}
+     *
+     * @param regex        The regular expression to find
+     * @param substitution The string to substitute
+     * @param opts         Any additional options
+     */
+    def sub(regex:        Regex,
+            substitution: String,
+            opts:         SubOpts = NoSubOpts) = {
+      Substitution(regex, substitution, opts)
     }
   }
 
-  private def editTask: Initialize[Task[Seq[File]]] = {
-    ((sources in EditSource.Config), EditSource.variables,
-     EditSource.substitutions, (EditSource.targetDirectory),
-     baseDirectory, EditSource.flatten, streams) map {
+  import autoImport._
 
-      (sources, variables, subs, target, base, flatten, streams) =>
+  override lazy val projectSettings = inConfig(EditSource)(baseSettings)
 
-      val varMap = variables.toMap
-      val log = streams.log
-      sources map editSource(varMap, subs, target, base, flatten, log)
+  // -----------------------------------------------------------------
+  // Implementation Stuff
+  // -----------------------------------------------------------------
+
+  object EditSourceRunner {
+    def edit(config: Configuration): Def.Initialize[Task[Seq[File]]] = Def.task {
+      val sourceFiles = (sources in EditSource).value
+      val vars        = (variables in EditSource).value
+      val subs        = (substitutions in EditSource).value
+      val targetDir   = (targetDirectory in EditSource).value
+      val baseDir     = baseDirectory.value
+      val flattenTree = (flatten in EditSource).value
+      val log         = streams.value.log
+
+      sourceFiles map editSource(vars.toMap, subs, targetDir, baseDir,
+                                 flattenTree, log)
+    }
+
+    def clean(config: Configuration): Def.Initialize[Task[Unit]] = Def.task {
+      val sourceFiles = (sources in EditSource).value
+      val targetDir   = (targetDirectory in EditSource).value
+      val baseDir     = baseDirectory.value
+      val flattenTree = (flatten in EditSource).value
+      val log         = streams.value.log
+
+      for (src <- sourceFiles) {
+        val target = targetFor(src, targetDir, baseDir, flattenTree)
+        if (target.exists) {
+          log.debug(s"Deleting $target ...")
+          target.delete
+        }
+      }
     }
   }
 
@@ -276,7 +271,12 @@ object EditSourcePlugin extends Plugin {
       for (line <- in.getLines()) {
         // Apply all variables, then the regexs.
 
-        out.println(applyRegexs(varSub.substitute(line), substitutions.toList))
+        val subbedValue = varSub.substitute(line) match {
+          case Left(e)  => throw new Exception(s"Substitution error: $e")
+          case Right(s) => s
+        }
+
+        out.println(applyRegexs(subbedValue, substitutions.toList))
       }
 
       out.close()
@@ -288,7 +288,7 @@ object EditSourcePlugin extends Plugin {
   private def applyRegexs(line: String,
                           substitutions: List[Substitution]): String = {
     def doSub(s: String, sub: Substitution): String = {
-      if (sub.options contains SubAll)
+      if (sub.options contains SubstituteAll)
         sub.re.replaceAllIn(s, sub.replacement)
       else
         sub.re.replaceFirstIn(s, sub.replacement)

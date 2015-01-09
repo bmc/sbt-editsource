@@ -53,7 +53,7 @@ private[editsource] class EditSourceStringTemplate(vars: Map[String, String]) {
   private val TimeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
   private val DateFormat = new SimpleDateFormat("yyyy/MM/dd")
 
-  @inline final def substitute(line: String) = delegate.substitute(line)
+  @inline final def substitute(line: String) = delegate.sub(line)
 
   def dereference(varName: String): Option[String] = {
     if (varName.trim == "")

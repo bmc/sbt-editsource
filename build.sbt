@@ -1,36 +1,36 @@
 // ---------------------------------------------------------------------------
-// SBT 0.10.x Build File for SBT EditSource Plugin
+// SBT Build File for SBT EditSource Plugin
 //
-// Copyright (c) 2010-2011 Brian M. Clapper
+// Copyright (c) 2010-2015 Brian M. Clapper
 //
 // See accompanying license file for license information.
 // ---------------------------------------------------------------------------
+
+import bintray.Keys._
 
 // ---------------------------------------------------------------------------
 // Basic settings
 
 name := "sbt-editsource"
 
-version := "0.6.5"
+version := "0.7.0"
 
 sbtPlugin := true
 
 organization := "org.clapper"
 
-licenses := Seq("BSD-like" ->
-  url("http://software.clapper.org/sbt-editsource/license.html")
-)
+licenses += ("BSD New", url("https://github.com/bmc/sbt-editsource/blob/master/LICENSE.md"))
 
 description := "SBT plugin to edit files on the fly"
 
 // ---------------------------------------------------------------------------
 // Additional compiler options and plugins
 
-scalacOptions ++= Seq("-deprecation", "-unchecked")
+scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature")
 
-crossScalaVersions := Seq("2.9.1", "2.9.2")
+crossScalaVersions := Seq("2.10.4")
 
-seq(lsSettings :_*)
+seq(lsSettings: _*)
 
 (LsKeys.tags in LsKeys.lsync) := Seq("sed", "edit", "filter")
 
@@ -40,26 +40,16 @@ seq(lsSettings :_*)
 // Other dependendencies
 
 // External deps
-libraryDependencies += "org.clapper" %% "grizzled-scala" % "1.0.13"
+libraryDependencies += "org.clapper" %% "grizzled-scala" % "1.3"
 
 // ---------------------------------------------------------------------------
 // Publishing criteria
 
-publishTo <<= (version) { version: String =>
-   val scalasbt = "http://scalasbt.artifactoryonline.com/scalasbt/"
-   val (name, url) = if (version.contains("-SNAPSHOT"))
-                       ("sbt-plugin-snapshots", scalasbt+"sbt-plugin-snapshots")
-                     else
-                       ("sbt-plugin-releases", scalasbt+"sbt-plugin-releases")
-   Some(Resolver.url(name, new URL(url))(Resolver.ivyStylePatterns))
-}
-
 publishMavenStyle := false
 
-publishArtifact in (Compile, packageBin) := true
+bintrayPublishSettings
 
-publishArtifact in (Test, packageBin) := false
+repository in bintray := "sbt-plugins"
 
-publishArtifact in (Compile, packageDoc) := false
+bintrayOrganization in bintray := None
 
-publishArtifact in (Compile, packageSrc) := false
