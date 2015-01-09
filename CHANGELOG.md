@@ -1,4 +1,11 @@
+Version 0.7.0
+
+* Upgraded to SBT 0.13.x.
+
+----
+
 Version 0.6.5:
+
 * Fixed problem with dependency versioning.
 
 ----
