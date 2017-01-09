@@ -263,7 +263,7 @@ request. Along with any patch you send:
   under a [BSD License][].
 
 [BSD License]: https://github.com/bmc/sbt-editsource/blob/master/LICENSE.md
-[sbt-edit-source]: http://software.clapper.org/sbt-editsource
+[sbt-editsource]: http://software.clapper.org/sbt-editsource
 [Scala]: http://www.scala-lang.org/
 [GitHub repository]: http://github.com/bmc/sbt-editsource
 [GitHub]: https://github.com/bmc/
@@ -271,7 +271,7 @@ request. Along with any patch you send:
 [SBT]: https://github.com/harrah/xsbt/
 [bmc@clapper.org]: mailto:bmc@clapper.org
 [changelog]: https://github.com/bmc/sbt-editsource/blob/master/CHANGELOG.md
-[sed]: http://en.wikipedia.org/wiki/Sed
+[*sed*]: http://en.wikipedia.org/wiki/Sed
 [regular expression]: http://download.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html
 [java.util.regex.Pattern]: http://download.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html
 [capturing groups]: http://download.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html#cg
