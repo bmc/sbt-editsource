@@ -265,6 +265,15 @@ The plugin provides two new SBT tasks.
 * `editsource:clean` deletes all target edited files. `editsource:clean`
   is also automatically linked into the main SBT `clean` task.
 
+## Hooking the edit task into the compile phase
+
+If you want the run `editsource:edit` every time you run `compile`, just
+add this line to your `build.sbt`:
+
+```
+compile in Compile <<= (compile in Compile) dependsOn (edit in EditSource)
+```
+
 # Restrictions
 
 * Currently, *sbt-editsource* only supports one set of edits, applied to
