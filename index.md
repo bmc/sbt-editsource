@@ -59,7 +59,6 @@ files under "src" ending in ".txt". To do so, use:
 If you also want to apply the edits to all files ending in ".md", use either:
 
     sources in EditSource <++= baseDirectory.map(d => (d / "src" ** "*.txt").get)
-
     sources in EditSource <++= baseDirectory.map(d => (d / "src" ** "*.md").get)
     
 or, more succinctly:
@@ -130,15 +129,50 @@ you'll end up with the following edited versions:
 
 ---
 
-`EditSource.variables` is a sequence of `(variableName, value)` pairs. For
-instance, the following two lines define a `${projectName}` variable that
-substitutes the name of the project, and a `${author}` variable:
+`EditSource.variables` is a sequence of `(variableName, value)` pairs. Let's
+take a look at some examples. We're going to define substitutions for three
+keys:
 
-    name := "my-project"
+* "name": The project's name, from the SBT configuration
+* "version": The project version, also from the SBT configuration
+* "author": The project's author, from a hard-coded string
 
-    variables in EditSource <+= name {name => ("projectName", name)}
+```
+variables in EditSource <+= name {s => ("projectName", s)}
+variables in EditSource += ("version", version.value)
+variables in EditSource += ("author", "Brian Clapper")
+```
 
-    variables in EditSource += ("author", "Brian Clapper")
+Let's look at each of these, one at a time.
+
+The first setting—the one setting the "projectName" key—is sort
+of like a `map()` operation:
+
+```
+variables in EditSource <+= name {s => ("projectName", s)}
+```
+
+In effect, we're mapping over the SBT name setting, passing its string value
+to the supplied block. The block returns a key-value pair which is added to the
+EditSource mappings via the SBT `<+=` operator. Any reference
+to `$projectName` in our source files will be replaced with the project name.
+
+The second example _also_ defines a mapping from an SBT configuration value,
+but it does it much more simply:
+
+```
+variables in EditSource += ("version", version.value)
+```
+
+In this case, we just use the `+=` SBT operator to add a key-value pair to the
+mappings. To get the string associated with the SBT `version` setting, we just
+use `version.value`. (This method is preferred over the first one, because
+it's much easier to read and remember.)
+
+The third setting is just a variation of the second one, adding a constant
+key-value string tuple to the mappings.
+
+**Using Variables in your Source Files**
 
 Inside a source file to be edited, variable references are of the form
 `${varname}`, as in the Unix shell. A shortened `$varname` is also support.
