@@ -1,3 +1,9 @@
+Version 0.8.0
+
+* Updated Grizzled Scala dependency to 4.2.0.
+
+----
+
 Version 0.7.0
 
 * Upgraded to SBT 0.13.x.

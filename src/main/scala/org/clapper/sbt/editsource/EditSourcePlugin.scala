@@ -39,7 +39,6 @@ package org.clapper.sbt.editsource
 
 import sbt._
 import sbt.Keys._
-
 import java.io.{File, FileWriter, PrintWriter}
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -48,6 +47,7 @@ import scala.io.Source
 import scala.util.matching.Regex
 import scala.annotation.tailrec
 import scala.language.implicitConversions
+import scala.util.{Failure, Success}
 
 import grizzled.file.{util => FileUtil}
 
@@ -272,8 +272,8 @@ object EditSourcePlugin extends AutoPlugin {
         // Apply all variables, then the regexs.
 
         val subbedValue = varSub.substitute(line) match {
-          case Left(e)  => throw new Exception(s"Substitution error: $e")
-          case Right(s) => s
+          case Failure(e)  => throw new Exception(s"Substitution error", e)
+          case Success(s)  => s
         }
 
         out.println(applyRegexs(subbedValue, substitutions.toList))

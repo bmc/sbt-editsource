@@ -6,14 +6,12 @@
 // See accompanying license file for license information.
 // ---------------------------------------------------------------------------
 
-import bintray.Keys._
-
 // ---------------------------------------------------------------------------
 // Basic settings
 
 name := "sbt-editsource"
 
-version := "0.7.0"
+version := "0.8.0"
 
 sbtPlugin := true
 
@@ -28,28 +26,37 @@ description := "SBT plugin to edit files on the fly"
 
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature")
 
-crossScalaVersions := Seq("2.10.4")
-
-seq(lsSettings: _*)
-
-(LsKeys.tags in LsKeys.lsync) := Seq("sed", "edit", "filter")
-
-(description in LsKeys.lsync) <<= description(d => d)
+crossScalaVersions := Seq("2.10.6")
 
 // ---------------------------------------------------------------------------
 // Other dependendencies
 
 // External deps
-libraryDependencies += "org.clapper" %% "grizzled-scala" % "1.3"
+libraryDependencies += "org.clapper" %% "grizzled-scala" % "4.2.0"
 
 // ---------------------------------------------------------------------------
 // Publishing criteria
 
 publishMavenStyle := false
 
-bintrayPublishSettings
+// ---------------------------------------------------------------------------
+// Publishing criteria
 
-repository in bintray := "sbt-plugins"
+// Don't set publishTo. The Bintray plugin does that automatically.
 
-bintrayOrganization in bintray := None
+publishMavenStyle := true
+publishArtifact in Test := false
+pomIncludeRepository := { _ => false }
+pomExtra :=
+  <scm>
+    <url>git@github.com:bmc/grizzled-scala.git/</url>
+    <connection>scm:git:git@github.com:bmc/sbt-editsource.git</connection>
+  </scm>
+    <developers>
+      <developer>
+        <id>bmc</id>
+        <name>Brian Clapper</name>
+        <url>http://www.clapper.org/bmc</url>
+      </developer>
+    </developers>
 
