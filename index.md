@@ -107,7 +107,7 @@ targetDirectory in EditSource := baseDirectory.value / "target"
 With
 
 ```scala
-flatten in EditSource := true
+flatten in EditSource := false
 ```
 
 (which is the default), you'll end up with the following edited versions:
