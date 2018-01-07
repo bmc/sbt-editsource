@@ -20,6 +20,13 @@ Each of these capabilities is explained in more detail, below.
 Within your SBT project, create `project/plugins/build.sbt` (if it
 doesn't already exist) and add the following:
 
+```scala
+addSbtPlugin("org.clapper" % "sbt-editsource" % "1.0.0")
+```
+
+The plugin is cross-built for both SBT 0.13.x and 1.0.x.
+
+
 # Settings and Tasks
 
 The plugin provides the following new settings and tasks.
