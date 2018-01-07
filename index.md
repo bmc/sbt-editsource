@@ -15,16 +15,10 @@ edited output file. It supports two kinds of edits:
 
 Each of these capabilities is explained in more detail, below.
 
-**This plugin only works with SBT 0.11.x or better.** If you're using SBT 0.7,
-there's an older version (with fewer features and a different variable syntax)
-[here](http://software.clapper.org/sbt-plugins/editsource.html).
-
 # Getting the Plugin
 
 Within your SBT project, create `project/plugins/build.sbt` (if it
 doesn't already exist) and add the following:
-
-    addSbtPlugin("org.clapper" % "sbt-editsource" % "0.7.0")
 
 # Settings and Tasks
 
@@ -34,59 +28,57 @@ The plugin provides the following new settings and tasks.
 `sources`). Of course, that's not always possible. To be sure you're updating
 the correct setting, *always* use the form:
 
-    settingName in EditSource
+```scala
+settingName in EditSource
+```
 
 For instance:
 
-    flatten in EditSource := false
+```scala
+flatten in EditSource := false
+```
 
 ## Settings
 
 The plugin provides the following new settings.
 
-
----
-
-**`sources`**
-
----
+### `sources`
 
 The source files to be edited. For instance, suppose you want to edit all
 files under "src" ending in ".txt". To do so, use:
 
-    sources in EditSource <++= baseDirectory.map(d => (d / "src" ** "*.txt").get)
+```scala
+sources in EditSource ++= (baseDirectory.value / "src" * "*.txt").get
+``` 
 
 If you also want to apply the edits to all files ending in ".md", use either:
 
-    sources in EditSource <++= baseDirectory.map(d => (d / "src" ** "*.txt").get)
-    sources in EditSource <++= baseDirectory.map(d => (d / "src" ** "*.md").get)
+```scala
+sources in EditSource ++= (baseDirectory.value / "src" * "*.txt").get
+sources in EditSource ++= (baseDirectory.value / "src" * "*.md").get
+```
     
 or, more succinctly:
 
-    sources in EditSource <++= baseDirectory.map { dir =>
-        (dir / "src" ** "*.txt").get ++
-        (dir / "src" ** "*.md").get
-    }
+```scala
+sources in EditSource ++= (baseDirectory.value / "src" * "*.txt").get ++
+                          (baseDirectory.value / "src" * "*.md").get
+```
 
----
-
-**`targetDirectory`**
-
----
+### `targetDirectory`
 
 The directory to which to write the edited versions of the source files.
 For example:
 
-    targetDirectory in EditSource <<= baseDirectory(_ / "target")
+```scala
+targetDirectory in EditSource := baseDirectory.value / "target"
+```
+
 
 See also `flatten`, below.
 
 
----
-
-**`flatten`**
-
----
+### `flatten`
 
 If `flatten` is `true`, then the edited files will all be placed
 directly in `targetDirectory`; if there are name clashes, then
@@ -100,36 +92,39 @@ An example will help clarify. Consider the following file tree:
 Let's assume you're editing all the files ending in ".md", into the *target*
 directory.
 
-    sources in EditSource <++= baseDirectory(
-      d => (d / "src" ** "*.md").get
-    )
+```scala
+sources in EditSource ++= (baseDirectory.value / "src" * "*.md").get
+targetDirectory in EditSource := baseDirectory.value / "target"
+```
 
-    targetDirectory in EditSource <<= baseDirectory(_ / "target")
-    
-If you also set:
+With
 
-    flatten in EditSource := true
+```scala
+flatten in EditSource := true
+```
+
+(which is the default), you'll end up with the following edited versions:
+
+* `target/src/main/code/overview.md`
+* `target/src/main/code/design.md`
+* `target/src/doc/user-guide.md`
+
+However, set:
+
+```scala
+flatten in EditSource := true
+```
 
 the edit operation will put all the edited versions of all three files
-directly in the *target* directory.
+directly in the *target* directory, yielding:
 
-If, instead, you set:
+* `target/overview.md`
+* `target/design.md`
+* `target/user-guide.md`
 
-    flatten in EditSource := false
+### `variables`
 
-you'll end up with the following edited versions:
-
-* _target/src/main/code/overview.md_
-* _target/src/main/code/design.md_
-* _target/src/doc/user-guide.md_
-
----
-
-**`variables`**
-
----
-
-`EditSource.variables` is a sequence of `(variableName, value)` pairs. Let's
+`variables` is a sequence of `(variableName, value)` pairs. Let's
 take a look at some examples. We're going to define substitutions for three
 keys:
 
@@ -137,42 +132,26 @@ keys:
 * "version": The project version, also from the SBT configuration
 * "author": The project's author, from a hard-coded string
 
-```
-variables in EditSource <+= name {s => ("projectName", s)}
-variables in EditSource += ("version", version.value)
-variables in EditSource += ("author", "Brian Clapper")
-```
-
-Let's look at each of these, one at a time.
-
-The first setting—the one setting the "projectName" key—is sort
-of like a `map()` operation:
-
-```
-variables in EditSource <+= name {s => ("projectName", s)}
+```scala
+variables in EditSource += "projectName" -> name.value
+variables in EditSource += "version" -> version.value
+variables in EditSource += "author" -> "Brian Clapper"
 ```
 
-In effect, we're mapping over the SBT name setting, passing its string value
-to the supplied block. The block returns a key-value pair which is added to the
-EditSource mappings via the SBT `<+=` operator. Any reference
-to `$projectName` in our source files will be replaced with the project name.
+Once you've defined those variables, you're free to substitute them in
+your files.
 
-The second example _also_ defines a mapping from an SBT configuration value,
-but it does it much more simply:
+#### Predefined variables
 
-```
-variables in EditSource += ("version", version.value)
-```
+Editsource provides some predefined variables for you:
 
-In this case, we just use the `+=` SBT operator to add a key-value pair to the
-mappings. To get the string associated with the SBT `version` setting, we just
-use `version.value`. (This method is preferred over the first one, because
-it's much easier to read and remember.)
-
-The third setting is just a variation of the second one, adding a constant
-key-value string tuple to the mappings.
-
-**Using Variables in your Source Files**
+* `baseDirectory`: The absolute path of the base (i.e., top-level) 
+   project directory.
+* `scalaVersion`: The current Scala version
+* `today`: The current date, in `yyyy/mm/dd` form (e.g., "2018/01/01"). 
+   (You can also use `sys.today`; see the next section.)
+   
+#### Using Variables in your Source Files
 
 Inside a source file to be edited, variable references are of the form
 `${varname}`, as in the Unix shell. A shortened `$varname` is also support.
@@ -204,16 +183,14 @@ In addition to the variables you define in your build file, the
   the `user.name` property, and `${sys.java.io.tmpdir}` substitutes the
   `java.io.tmpdir` property.
 
----
+### `substitutions`
 
-**`substitutions`**
+`substitutions` is a sequence of [regular expression][] edits, of the form:
 
----
-
-`substitutions` is a sequence of [regular expression][] substitutions, of the form:
-
-    sub(regex, replacement)
-    sub(regex, replacement, flags)
+```scala
+sub(regex, replacement)
+sub(regex, replacement, flags)
+```
 
 There's only one (optional) flag right now:
 
@@ -226,7 +203,9 @@ for the [java.util.regex.Pattern][] class.
 For example, to replace the first occurrence of the word "test" in each
 line with "TEST", without regard to case, you might use:
 
-    substitutions in EditSource += sub("""(?i)\btest\b""".r, "TEST")
+```scala
+substitutions in EditSource += sub("""(?i)\btest\b""".r, "TEST")
+```
 
 The "`(?i)`" is the embedded option sequence that tells the regular expression
 parser to use case-blind comparison.
@@ -234,22 +213,28 @@ parser to use case-blind comparison.
 Similarly, to replace all occurrences of the word "test", *with* regard to
 case, you might use:
 
-    substitutions in EditSource += sub("""\btest\b""".r, "TEST", SubAll)
+```scala
+substitutions in EditSource += sub("""\btest\b""".r, "TEST", SubAll)
+```
 
 You can specify multiple substitutions, of course:
 
-    substitutions in EditSource ++= Seq(
-        sub("""^#""".r, "//"),
-        sub("""\b(?i)simple build tool\b""".r, "Scalable Build Tool", SubAll)
-    )
+```scala
+substitutions in EditSource ++= Seq(
+    sub("""^#""".r, "//"),
+    sub("""\b(?i)simple build tool\b""".r, "Scalable Build Tool", SubAll)
+)
+```
 
 Also, regular expression [capturing groups][] are supported, so you can use
 more complex regular expression substitutions like this:
 
-    // Remove everything up to, but not including the word "foo", but save
-    // the "foo" and everything after.
+```scala
+// Remove everything up to, but not including the word "foo", but save
+// the "foo" and everything after.
 
-    sub("""^.*(foo.*)$""".r, "$1")
+sub("""^.*(foo.*)$""".r, "$1")
+```
 
 *NOTE*: Regular expression substitutions are run *after* variable substitutions.
 
@@ -271,7 +256,7 @@ If you want the run `editsource:edit` every time you run `compile`, just
 add this line to your `build.sbt`:
 
 ```
-compile in Compile <<= (compile in Compile) dependsOn (edit in EditSource)
+compile in Compile := ((compile in Compile) dependsOn (edit in EditSource)).value
 ```
 
 # Restrictions
@@ -292,7 +277,7 @@ Brian M. Clapper, [bmc@clapper.org][]
 
 # Copyright and License
 
-This software is copyright &copy; 2010-2011 Brian M. Clapper and is
+This software is copyright &copy; 2010-2018 Brian M. Clapper and is
 released under a [BSD License][].
 
 # Patches
