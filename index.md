@@ -116,7 +116,7 @@ flatten in EditSource := false
 * `target/src/main/code/design.md`
 * `target/src/doc/user-guide.md`
 
-However, set:
+However, if you set:
 
 ```scala
 flatten in EditSource := true
