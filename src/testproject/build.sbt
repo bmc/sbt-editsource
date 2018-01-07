@@ -27,3 +27,4 @@ substitutions in EditSource ++= Seq(
     sub("""\b(?i)simple build tool\b""".r, "Scalable Build Tool")
 )
 
+compile in Compile := ((compile in Compile) dependsOn (edit in EditSource)).value
