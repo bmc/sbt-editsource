@@ -59,6 +59,8 @@ import grizzled.file.{util => FileUtil}
  */
 object EditSourcePlugin extends AutoPlugin {
 
+  override def requires = plugins.JvmPlugin
+
   // -----------------------------------------------------------------
   // Classes, traits, implicits
   // -----------------------------------------------------------------
@@ -103,9 +105,7 @@ object EditSourcePlugin extends AutoPlugin {
    * Contains a substitution. Instead of instantiating this directly,
    * though, use the `sub` convenience function.
    */
-  case class Substitution(val re:           Regex,
-                          val replacement:  String,
-                          val options:      SubOpts)
+  case class Substitution(re: Regex, replacement: String, options: SubOpts)
 
   // -----------------------------------------------------------------
   // Plugin Settings and Task Declarations
@@ -120,44 +120,39 @@ object EditSourcePlugin extends AutoPlugin {
 
     val EditSource = config("editsource")
 
-    val targetDirectory = SettingKey[File](
-      "target-directory", "Where to copy the edited files"
-    )
+    val targetDirectory = settingKey[File]("Where to copy the edited files")
 
     // Update with:
     //
     // variables in EditSource <+= organization {org => ("organization", org)}
     // variables in EditSource += ("foo", "bar")
-    val variables = SettingKey[Seq[(String, String)]](
-      "variables", "variable -> value mappings"
+    val variables = settingKey[Seq[(String, String)]](
+      "variable -> value mappings"
     )
+
 
     // e.g., replace all instances of "foo" (caseblind) with "bar", but
     // only if "foo" appears by itself.
     // substitutions in EditSource += ("""(?i)\bfoo\b""".r, "bar")
-    val substitutions = SettingKey[Seq[Substitution]](
-      "substitutions", "regex -> replacement strings"
+    val substitutions = settingKey[Seq[Substitution]](
+      "regex -> replacement strings"
     )
 
     // Whether or not to flatten the directory structure.
-    val flatten = SettingKey[Boolean](
-      "flatten", "Don't preserve source directory structure."
+    val flatten = settingKey[Boolean](
+      "Don't preserve source directory structure."
     )
 
-    val edit = TaskKey[Seq[File]](
-      "edit", "Fire up the editin' engine."
-    )
+    val edit = taskKey[Seq[File]]("Fire up the editin' engine.")
 
     val clean = TaskKey[Unit]("clean", "Remove target files") in EditSource
 
     private val DateFormat = new SimpleDateFormat("yyyy/MM/dd")
 
     lazy val baseSettings: Seq[Def.Setting[_]] = Seq(
-      sources := Seq.empty[File],
-
       variables := Seq(("today", DateFormat.format(new Date))),
-      variables <+= baseDirectory(bd => ("baseDirectory", bd.absolutePath)),
-      variables <+= scalaVersion(sv => ("scalaVersion", sv)),
+      variables += "baseDirectory" -> baseDirectory.value.absolutePath,
+      variables += "scalaVersion" -> scalaVersion.value,
 
       flatten         := true,
       substitutions   := Seq.empty[Substitution],

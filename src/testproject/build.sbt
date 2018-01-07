@@ -1,24 +1,24 @@
 
 name := "sbt-editsource-test"
 
-version := "0.3"
+version := "0.4"
 
 organization := "org.clapper"
 
-libraryDependencies += "org.clapper" %% "grizzled-scala" % "1.0.10"
+libraryDependencies += "org.clapper" %% "grizzled-scala" % "4.4.2"
 
-(sources in EditSource) <++= baseDirectory map { d =>
-    (d / "src" * "*.txt").get ++
-    (d / "src" * "*.md").get
-}
+(sources in EditSource) ++= (baseDirectory.value / "src" * "*.txt").get ++
+                            (baseDirectory.value / "src" * "*.md").get
 
-targetDirectory in EditSource <<= baseDirectory(_ / "target")
+//    (bd / "src" * "*.md")
 
-variables in EditSource <+= organization {org => ("organization", org)}
+targetDirectory in EditSource := baseDirectory.value / "target"
 
-variables in EditSource += ("foo", "bar")
+variables in EditSource += "organization" -> organization.value
 
-flatten in EditSource := false
+variables in EditSource += "foo" -> "bar"
+
+flatten in EditSource := true
 
 substitutions in EditSource += sub("""build""".r, "Build")
 

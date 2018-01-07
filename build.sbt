@@ -1,62 +1,31 @@
 // ---------------------------------------------------------------------------
 // SBT Build File for SBT EditSource Plugin
 //
-// Copyright (c) 2010-2015 Brian M. Clapper
+// Copyright (c) 2010-2018 Brian M. Clapper
 //
 // See accompanying license file for license information.
 // ---------------------------------------------------------------------------
 
-// ---------------------------------------------------------------------------
-// Basic settings
+lazy val commonSettings = Seq(
+  version in ThisBuild := "1.0.0",
+  organization in ThisBuild := "org.clapper"
+)
 
-name := "sbt-editsource"
+lazy val root = (project in file(".")).settings(
+  commonSettings,
 
-version := "0.8.0"
+  sbtPlugin := true,
+  name := "sbt-editsource",
+  description := "SBT plugin to edit files on the fly",
+  licenses += ("BSD New", url("https://github.com/bmc/sbt-editsource/blob/master/LICENSE.md")),
+  publishMavenStyle := false,
+  bintrayRepository := "sbt-plugins",
+  bintrayOrganization in bintray := None,
 
-sbtPlugin := true
-
-organization := "org.clapper"
-
-licenses += ("BSD New", url("https://github.com/bmc/sbt-editsource/blob/master/LICENSE.md"))
-
-description := "SBT plugin to edit files on the fly"
-
-// ---------------------------------------------------------------------------
-// Additional compiler options and plugins
-
-scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature")
-
-crossScalaVersions := Seq("2.10.6")
-
-// ---------------------------------------------------------------------------
-// Other dependendencies
-
-// External deps
-libraryDependencies += "org.clapper" %% "grizzled-scala" % "4.2.0"
-
-// ---------------------------------------------------------------------------
-// Publishing criteria
-
-publishMavenStyle := false
-
-// ---------------------------------------------------------------------------
-// Publishing criteria
-
-// Don't set publishTo. The Bintray plugin does that automatically.
-
-publishMavenStyle := true
-publishArtifact in Test := false
-pomIncludeRepository := { _ => false }
-pomExtra :=
-  <scm>
-    <url>git@github.com:bmc/grizzled-scala.git/</url>
-    <connection>scm:git:git@github.com:bmc/sbt-editsource.git</connection>
-  </scm>
-    <developers>
-      <developer>
-        <id>bmc</id>
-        <name>Brian Clapper</name>
-        <url>http://www.clapper.org/bmc</url>
-      </developer>
-    </developers>
+  scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature"),
+  // Note: To cross-build, use "^compile", not "+compile", and
+  // "^publishLocalSigned" or "^publish"
+  crossSbtVersions := Seq("0.13.16", "1.0.3"),
+  libraryDependencies += "org.clapper" %% "grizzled-scala" % "4.4.2",
+)
 

@@ -1,6 +1,7 @@
-Version 0.8.0
+Version 1.0.0
 
-* Updated Grizzled Scala dependency to 4.2.0.
+* Updated Grizzled Scala dependency to 4.4.1.
+* Updated to cross-build against SBT 1.0.x and 0.13.x.
 
 ----
 
